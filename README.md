@@ -132,3 +132,25 @@ Open **`http://localhost:5000`** in any web browser or industrial tablet.
 docker compose up -d --build
 ```
 Open **`http://localhost:5000`**.
+
+---
+
+## 🌐 Automated Git Deployment (GitHub Pages)
+
+The repository includes a continuous deployment pipeline configured via **GitHub Actions** (`.github/workflows/deploy.yml`).
+
+### Live Deployed URL
+🔗 **`https://bkiran27.github.io/Factory-Quality-Control-System-Specs/`**
+
+### How It Works:
+1. Every `git push origin main` triggers the automated GitHub Actions workflow.
+2. The workflow installs client dependencies, executes type-checking and the Vite production build (`dist/`), and deploys directly to GitHub Pages.
+3. Client routes and asset URLs are configured with relative base paths (`./`) and an automatic `404.html` fallback for zero-configuration browser hosting.
+
+### Enabling GitHub Pages in Your Repo:
+If deploying for the first time on GitHub:
+1. Go to your repository on GitHub: `https://github.com/BKiran27/Factory-Quality-Control-System-Specs`
+2. Click **Settings** ➔ **Pages** (in the left sidebar).
+3. Under **Build and deployment** ➔ **Source**, select **GitHub Actions**.
+4. Future pushes to `main` will build and publish automatically within 60 seconds!
+
