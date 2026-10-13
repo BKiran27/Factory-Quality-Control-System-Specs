@@ -1,0 +1,700 @@
+module.exports = {
+  factories: [
+    {
+      id: 'PLANT-01',
+      name: 'Zapuza Technologies Main Plant #1',
+      location: 'Peenya Industrial Area, Bangalore, Karnataka, India',
+      code: 'BLR-FAC-01',
+      certifications: ['ISO 9001:2015', 'AS9100D Aerospace Certified', 'IATF 16949']
+    }
+  ],
+
+  departments: [
+    { id: 'DEPT-101', name: 'Main Machining Shop', head: 'Rajesh Sharma', floorArea: 'Bay A & B' },
+    { id: 'DEPT-102', name: 'Heat Treatment Bay', head: 'V. Sundaram', floorArea: 'Bay C' },
+    { id: 'DEPT-103', name: 'Surface Finishing & Precision Grinding', head: 'Anil Deshmukh', floorArea: 'Bay D' },
+    { id: 'DEPT-104', name: 'Quality Assurance & CMM Metrology Lab', head: 'Robert Vance', floorArea: 'Cleanroom Lab' },
+    { id: 'DEPT-105', name: 'Final Assembly & Packing Line', head: 'Suresh Patil', floorArea: 'Bay E' },
+    { id: 'DEPT-106', name: 'Raw Material Dock Intake & Store', head: 'M. K. Rao', floorArea: 'North Dock' },
+    { id: 'DEPT-107', name: 'Digital Rejection Holding Area', head: 'MRB Review Board', floorArea: 'Isolated Bay 107' }
+  ],
+
+  workstations: [
+    {
+      id: 'CNC-04',
+      name: 'CNC Lathe #04 (Haas ST-20)',
+      qrCode: 'STATION-CNC-04',
+      department: 'Main Machining Shop',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T06:00:00.000Z',
+      pmCheckedBy: 'OP-104 (Sunil M.)',
+      zeroPointVerified: true,
+      currentOperator: 'Sunil M.',
+      targetCycleMinutes: 45
+    },
+    {
+      id: 'VMC-02',
+      name: 'VMC Station #02 (Haas VF-2)',
+      qrCode: 'STATION-VMC-02',
+      department: 'Main Machining Shop',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T06:15:00.000Z',
+      pmCheckedBy: 'OP-109 (Vikram S.)',
+      zeroPointVerified: true,
+      currentOperator: 'Vikram S.',
+      targetCycleMinutes: 50
+    },
+    {
+      id: 'HT-01',
+      name: 'Heat Treat Oven #01 (Carburizing Furnace)',
+      qrCode: 'STATION-HT-01',
+      department: 'Heat Treatment Bay',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T05:30:00.000Z',
+      pmCheckedBy: 'OP-201 (K. Raman)',
+      zeroPointVerified: true,
+      currentOperator: 'K. Raman',
+      targetCycleMinutes: 180
+    },
+    {
+      id: 'GRIND-03',
+      name: 'Precision Grinder #03 (Cylindrical)',
+      qrCode: 'STATION-GRIND-03',
+      department: 'Surface Finishing & Precision Grinding',
+      pmStatus: 'Overdue', // Demonstrates Machine PM Calibration Lock!
+      lastPmDate: '2026-10-10T08:00:00.000Z',
+      pmCheckedBy: null,
+      zeroPointVerified: false,
+      currentOperator: 'Unassigned',
+      targetCycleMinutes: 30
+    },
+    {
+      id: 'WASH-01',
+      name: 'Deburring & Ultrasonic Wash #01',
+      qrCode: 'STATION-WASH-01',
+      department: 'Surface Finishing & Precision Grinding',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T07:00:00.000Z',
+      pmCheckedBy: 'OP-304',
+      zeroPointVerified: true,
+      currentOperator: 'Arun V.',
+      targetCycleMinutes: 20
+    },
+    {
+      id: 'CMM-01',
+      name: 'Final PDI & CMM Metrology #01 (Zeiss)',
+      qrCode: 'STATION-CMM-01',
+      department: 'Quality Assurance & CMM Metrology Lab',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T06:30:00.000Z',
+      pmCheckedBy: 'QA-002 (David L.)',
+      zeroPointVerified: true,
+      currentOperator: 'David L. (QA Inspector)',
+      targetCycleMinutes: 25
+    },
+    {
+      id: 'GATE-01',
+      name: 'Shipping Clearance & Packing Dock Gate #01',
+      qrCode: 'STATION-GATE-01',
+      department: 'Final Assembly & Packing Line',
+      pmStatus: 'Completed',
+      lastPmDate: '2026-10-13T06:00:00.000Z',
+      pmCheckedBy: 'DISP-01',
+      zeroPointVerified: true,
+      currentOperator: 'Sita Nair (Dispatch Lead)',
+      targetCycleMinutes: 15
+    }
+  ],
+
+  gauges: [
+    {
+      id: 'VC-104',
+      name: 'Mitutoyo Vernier Caliper (0-150mm)',
+      serialNumber: 'VC-104-MITU',
+      type: 'Vernier Caliper',
+      lastCalibrationDate: '2026-06-15',
+      expiryDate: '2026-12-15',
+      status: 'Valid',
+      accuracy: '±0.01 mm',
+      cribLocation: 'Crib-A-04'
+    },
+    {
+      id: 'VC-99',
+      name: 'Insize Digital Caliper (0-200mm)',
+      serialNumber: 'VC-99-INS',
+      type: 'Digital Caliper',
+      lastCalibrationDate: '2026-03-30',
+      expiryDate: '2026-09-30', // EXPIRED! Demonstrates tool calibration lock
+      status: 'Expired',
+      accuracy: '±0.02 mm',
+      cribLocation: 'Crib-A-09'
+    },
+    {
+      id: 'MIC-201',
+      name: 'Starrett Precision Micrometer (25-50mm)',
+      serialNumber: 'MIC-201-STAR',
+      type: 'Micrometer',
+      lastCalibrationDate: '2026-05-20',
+      expiryDate: '2026-11-20',
+      status: 'Valid',
+      accuracy: '±0.002 mm',
+      cribLocation: 'Crib-B-02'
+    },
+    {
+      id: 'PG-04',
+      name: 'Thread Plug Gauge (M16 x 1.5 6H)',
+      serialNumber: 'PG-04-TPG',
+      type: 'Thread Plug Gauge',
+      lastCalibrationDate: '2026-07-10',
+      expiryDate: '2027-01-10',
+      status: 'Valid',
+      accuracy: 'Go / No-Go Class 6H',
+      cribLocation: 'Crib-C-11'
+    },
+    {
+      id: 'HG-12',
+      name: 'Mitutoyo Digital Height Gauge (0-600mm)',
+      serialNumber: 'HG-12-DIGI',
+      type: 'Height Gauge',
+      lastCalibrationDate: '2026-06-01',
+      expiryDate: '2026-12-01',
+      status: 'Valid',
+      accuracy: '±0.005 mm',
+      cribLocation: 'Metrology Lab'
+    },
+    {
+      id: 'CMM-ZEISS-01',
+      name: 'Zeiss Contura Bridge CMM',
+      serialNumber: 'ZEISS-CMM-994',
+      type: 'CMM Machine',
+      lastCalibrationDate: '2026-04-01',
+      expiryDate: '2027-04-01',
+      status: 'Valid',
+      accuracy: '±0.0015 mm',
+      cribLocation: 'Metrology Cleanroom'
+    },
+    {
+      id: 'RA-08',
+      name: 'Mitutoyo Surftest SJ-210 Roughness Tester',
+      serialNumber: 'RA-08-SURF',
+      type: 'Surface Roughness Tester',
+      lastCalibrationDate: '2026-05-05',
+      expiryDate: '2026-11-05',
+      status: 'Valid',
+      accuracy: '0.01 µm Ra',
+      cribLocation: 'Metrology Lab'
+    }
+  ],
+
+  parts: [
+    {
+      partNumber: 'TS-204',
+      partName: 'Aerospace Turbine Main Shaft',
+      materialGrade: 'AISI 4340 High-Strength Alloy Steel',
+      revision: 'Rev B',
+      cncProgram: 'NC-TS204-REV4.opt',
+      fixtureSetup: 'FIXTURE-SH-09A (Pneumatic 3-Jaw Chuck)',
+      toolingOffsets: 'T01-Rough: X+0.00 Z-0.12, T02-Finish: X-0.02 Z+0.05',
+      primaryCustomer: 'Pratt Aerospace Corp',
+      nominalWeightKg: 14.2
+    },
+    {
+      partNumber: 'PG-88',
+      partName: 'Planetary Sun Gear (60-Tooth)',
+      materialGrade: 'EN353 Case Hardening Alloy Steel',
+      revision: 'Rev A',
+      cncProgram: 'NC-PG88-REV2.opt',
+      fixtureSetup: 'FIXTURE-GEAR-03',
+      toolingOffsets: 'T01-Hob: X+0.00 Z+0.00',
+      primaryCustomer: 'Tata Motors Powertrain Division',
+      nominalWeightKg: 4.8
+    },
+    {
+      partNumber: 'FH-12',
+      partName: 'Subsea Hydraulic Flange Hub',
+      materialGrade: 'AISI 316L Marine Stainless Steel',
+      revision: 'Rev C',
+      cncProgram: 'NC-FH12-REV3.opt',
+      fixtureSetup: 'FIXTURE-FLANGE-11',
+      toolingOffsets: 'T01: X+0.05 Z-0.01',
+      primaryCustomer: 'Schlumberger Marine Systems',
+      nominalWeightKg: 28.5
+    }
+  ],
+
+  rawMaterials: [
+    {
+      id: 'RMI-2026-1001',
+      heatNumber: 'H-8042',
+      supplierName: 'Jindal High-Strength Alloys Ltd.',
+      poNumber: 'PO-88201',
+      materialGrade: 'AISI 4340 Alloy Steel Billets',
+      quantity: 450,
+      unit: 'Billets',
+      receivedDate: '2026-10-08T09:30:00.000Z',
+      recordedBy: 'DOCK-CLERK-01 (M. K. Rao)',
+      status: 'Cleared to Store',
+      barcodeTag: 'RAW-H8042-4340',
+      mtcFileName: 'MTC_H-8042_Jindal_Certified.pdf',
+      verifiedBy: 'QA-LAB-TECH-02 (Dr. Ananya Roy)',
+      clearedDate: '2026-10-08T14:15:00.000Z',
+      chemicalSpecs: [
+        { element: 'Carbon (C)', min: 0.38, max: 0.43, actual: 0.405, unit: '%', passed: true },
+        { element: 'Manganese (Mn)', min: 0.60, max: 0.85, actual: 0.720, unit: '%', passed: true },
+        { element: 'Silicon (Si)', min: 0.15, max: 0.35, actual: 0.240, unit: '%', passed: true },
+        { element: 'Chromium (Cr)', min: 0.70, max: 0.90, actual: 0.810, unit: '%', passed: true },
+        { element: 'Nickel (Ni)', min: 1.65, max: 2.00, actual: 1.820, unit: '%', passed: true },
+        { element: 'Molybdenum (Mo)', min: 0.20, max: 0.30, actual: 0.250, unit: '%', passed: true }
+      ],
+      mechanicalSpecs: [
+        { property: 'Yield Strength', min: 850, max: 1100, actual: 895, unit: 'MPa', passed: true },
+        { property: 'Tensile Strength', min: 1080, max: 1280, actual: 1140, unit: 'MPa', passed: true },
+        { property: 'Elongation', min: 12.0, max: 25.0, actual: 15.8, unit: '%', passed: true },
+        { property: 'Hardness (HB)', min: 280, max: 320, actual: 295, unit: 'HB', passed: true }
+      ]
+    },
+    {
+      id: 'RMI-2026-1002',
+      heatNumber: 'H-9104',
+      supplierName: 'Apex Special Steels Corp.',
+      poNumber: 'PO-88204',
+      materialGrade: 'EN353 Case Hardening Steel Bars',
+      quantity: 120,
+      unit: 'Bars',
+      receivedDate: '2026-10-12T11:00:00.000Z',
+      recordedBy: 'DOCK-CLERK-01',
+      status: 'In Lab Testing',
+      barcodeTag: 'RAW-H9104-EN353',
+      mtcFileName: 'MTC_H-9104_Apex.pdf',
+      chemicalSpecs: [
+        { element: 'Carbon (C)', min: 0.12, max: 0.17, actual: 0.145, unit: '%', passed: true },
+        { element: 'Nickel (Ni)', min: 1.00, max: 1.50, actual: 1.25, unit: '%', passed: true },
+        { element: 'Chromium (Cr)', min: 0.75, max: 1.25, actual: 1.02, unit: '%', passed: true }
+      ],
+      mechanicalSpecs: [
+        { property: 'Tensile Strength', min: 780, max: 980, actual: 860, unit: 'MPa', passed: true }
+      ]
+    },
+    {
+      id: 'RMI-2026-1003',
+      heatNumber: 'H-6621',
+      supplierName: 'Global Metallurgy Inc.',
+      poNumber: 'PO-88190',
+      materialGrade: 'AISI 316L Round Bar',
+      quantity: 80,
+      unit: 'Bars',
+      receivedDate: '2026-10-09T16:20:00.000Z',
+      recordedBy: 'DOCK-CLERK-01',
+      status: 'Supplier Quarantine',
+      sncrNumber: 'SNCR-2026-042',
+      rejectionReason: 'Carbon level exceeded allowable max for 316L (Actual 0.055% vs Max 0.030%). Spectro test re-run failed.',
+      barcodeTag: 'QUARANTINE-RAW-H6621',
+      mtcFileName: 'MTC_H-6621_Global.pdf',
+      verifiedBy: 'QA-LAB-TECH-02',
+      rejectedDate: '2026-10-10T10:00:00.000Z',
+      chemicalSpecs: [
+        { element: 'Carbon (C)', min: 0.00, max: 0.030, actual: 0.055, unit: '%', passed: false }
+      ],
+      mechanicalSpecs: []
+    }
+  ],
+
+  templates: [
+    {
+      id: 'TMPL-TS204-PDI',
+      partNumber: 'TS-204',
+      partName: 'Aerospace Turbine Main Shaft',
+      revision: 'Rev B',
+      status: 'Approved',
+      approvedBy: 'Robert Vance (Quality Assurance Manager)',
+      approvedDate: '2026-10-05T14:00:00.000Z',
+      blueprintUrl: '/blueprints/shaft_ts204_schematic.svg',
+      pins: [
+        {
+          pinId: 1,
+          x: 25,
+          y: 45,
+          label: 'Bearing Journal Outer Diameter',
+          type: 'tolerance',
+          nominal: 45.000,
+          upper: 0.025,
+          lower: -0.010,
+          unit: 'mm',
+          toolGaugeId: 'MIC-201',
+          toolName: 'Precision Micrometer',
+          isCtq: true, // Critical To Quality!
+          notes: 'Class 6 precision press-fit journal. Freeze checklist if out-of-spec!'
+        },
+        {
+          pinId: 2,
+          x: 48,
+          y: 40,
+          label: 'Spline Section Overall Length',
+          type: 'tolerance',
+          nominal: 110.00,
+          upper: 0.15,
+          lower: -0.15,
+          unit: 'mm',
+          toolGaugeId: 'VC-104',
+          toolName: 'Vernier Caliper',
+          isCtq: false,
+          notes: 'Total spline cut stroke length'
+        },
+        {
+          pinId: 3,
+          x: 74,
+          y: 56,
+          label: 'Mounting Flange Step Thickness',
+          type: 'tolerance',
+          nominal: 22.50,
+          upper: 0.05,
+          lower: -0.05,
+          unit: 'mm',
+          toolGaugeId: 'HG-12',
+          toolName: 'Digital Height Gauge',
+          isCtq: true, // Critical To Quality!
+          notes: 'Critical thrust face thickness. Strict interlock.'
+        },
+        {
+          pinId: 4,
+          x: 88,
+          y: 45,
+          label: 'Retaining Thread M16x1.5 6H Fit',
+          type: 'visual',
+          expected: 'Pass',
+          nominal: 0,
+          upper: 0,
+          lower: 0,
+          unit: 'Go/No-Go',
+          toolGaugeId: 'PG-04',
+          toolName: 'Thread Plug Gauge',
+          isCtq: false,
+          notes: 'Thread Go-plug must freely enter; No-Go plug must stop within 2 turns.'
+        },
+        {
+          pinId: 5,
+          x: 35,
+          y: 52,
+          label: 'Journal Surface Finish Roughness',
+          type: 'max',
+          maxLimit: 0.80,
+          nominal: 0.60,
+          upper: 0.20,
+          lower: 0,
+          unit: 'µm Ra',
+          toolGaugeId: 'RA-08',
+          toolName: 'Surftest Roughness Tester',
+          isCtq: false,
+          notes: 'Ra must be ≤ 0.80 µm for dynamic oil seal life'
+        },
+        {
+          pinId: 6,
+          x: 12,
+          y: 65,
+          label: 'Deburred Radii & Rust Preventative Coat',
+          type: 'visual',
+          expected: 'Pass',
+          nominal: 0,
+          upper: 0,
+          lower: 0,
+          unit: 'Visual Pass/Fail',
+          toolGaugeId: 'VISUAL',
+          toolName: 'Optical Visual Inspection',
+          isCtq: false,
+          notes: '100% burr-free edges, light anti-corrosion coating applied'
+        }
+      ]
+    }
+  ],
+
+  jobTravelers: [
+    {
+      id: 'TRV-2026-9041',
+      barcode: 'TRV-9041',
+      workOrder: 'WO-44820',
+      partNumber: 'TS-204',
+      partName: 'Aerospace Turbine Main Shaft',
+      heatLot: 'H-8042',
+      batchSize: 25,
+      customer: 'Pratt Aerospace Corp',
+      customerPo: 'PO-PAC-2026-789',
+      releaseDate: '2026-10-12T08:00:00.000Z',
+      targetDispatch: '2026-10-15T18:00:00.000Z',
+      overallStatus: 'In Production (Cooling Hold Active)',
+      physicalFloorLocation: 'Heat Treatment Bay (Buffer Area)',
+      pdiStatus: 'Pending Downstream Ops',
+      finishedSerialNumbers: [
+        'SN-2026-9041-01', 'SN-2026-9041-02', 'SN-2026-9041-03', 'SN-2026-9041-04',
+        'SN-2026-9041-05', 'SN-2026-9041-06', 'SN-2026-9041-07', 'SN-2026-9041-08'
+      ],
+      operations: [
+        {
+          opNumber: 10,
+          operationName: 'Raw Material Billet Sawing & Facing',
+          machineId: 'Station-Saw #01',
+          status: 'Completed',
+          completedAt: '2026-10-12T10:15:00.000Z',
+          operatorId: 'OP-102 (R. Nair)',
+          cycleMinutes: 35,
+          notes: 'Billet length cut to 245.5mm ±0.5mm.'
+        },
+        {
+          opNumber: 20,
+          operationName: 'CNC Rough & Finish Turning',
+          machineId: 'CNC Lathe #04 (Haas ST-20)',
+          status: 'Completed',
+          completedAt: '2026-10-12T15:45:00.000Z',
+          operatorId: 'OP-104 (Sunil M.)',
+          cycleMinutes: 48,
+          firstPieceInspection: {
+            status: 'Approved',
+            inspectedBy: 'QA-LEAD-CARTER',
+            timestamp: '2026-10-12T11:20:00.000Z',
+            remarks: 'Setup dimensions confirmed within 0.01mm tolerance. Full lot machining released.'
+          },
+          notes: 'Completed 25 pieces.'
+        },
+        {
+          opNumber: 30,
+          operationName: 'Heat Treatment & Carburizing',
+          machineId: 'Heat Treat Oven #01',
+          status: 'Completed',
+          completedAt: new Date(Date.now() - 2.63 * 3600 * 1000).toISOString(), // ~2.63 hours ago
+          operatorId: 'OP-201 (K. Raman)',
+          cycleMinutes: 180,
+          holdDurationMinutes: 240, // 4 hours mandatory cooling hold!
+          holdStartedAt: new Date(Date.now() - 2.63 * 3600 * 1000).toISOString(),
+          holdTargetRelease: new Date(Date.now() + (4 - 2.63) * 3600 * 1000).toISOString(), // ~1 hr 22 min remaining
+          holdStatus: 'Active Hold',
+          notes: 'Case carburized 0.8mm depth. Strict 4-hour cooling hold in progress before grinding.'
+        },
+        {
+          opNumber: 40,
+          operationName: 'Precision Cylindrical Grinding',
+          machineId: 'Precision Grinder #03',
+          status: 'Holding (Cooling/Curing)', // Interlocked! Cannot start until hold timer hits 0
+          operatorId: null,
+          cycleMinutes: 40,
+          notes: 'LOCKED: Mandatory cooling hold active from Op 30.'
+        },
+        {
+          opNumber: 50,
+          operationName: 'Ultrasonic Wash & Deburr',
+          machineId: 'Deburring & Ultrasonic Wash #01',
+          status: 'Pending',
+          cycleMinutes: 20
+        },
+        {
+          opNumber: 60,
+          operationName: 'Final PDI & CMM Metrology Inspection',
+          machineId: 'Final PDI & CMM Metrology #01 (Zeiss)',
+          status: 'Pending',
+          cycleMinutes: 25
+        },
+        {
+          opNumber: 70,
+          operationName: 'Dispatch Packing & Gate Clearance',
+          machineId: 'Shipping Clearance & Packing Dock Gate #01',
+          status: 'Pending',
+          cycleMinutes: 15
+        }
+      ]
+    },
+
+    {
+      id: 'TRV-2026-9042',
+      barcode: 'TRV-9042',
+      workOrder: 'WO-44821',
+      partNumber: 'TS-204',
+      partName: 'Aerospace Turbine Main Shaft',
+      heatLot: 'H-8042',
+      batchSize: 15,
+      customer: 'Pratt Aerospace Corp',
+      customerPo: 'PO-PAC-2026-789',
+      releaseDate: '2026-10-11T09:00:00.000Z',
+      targetDispatch: '2026-10-14T12:00:00.000Z',
+      overallStatus: 'Pending Supervisor Review (Concession Proposed)',
+      physicalFloorLocation: 'PDI Inspection Bay #02',
+      pdiStatus: 'Pending Supervisor Review',
+      pdiInspectionId: 'INSP-9042-REV',
+      finishedSerialNumbers: [
+        'SN-2026-9042-01', 'SN-2026-9042-02', 'SN-2026-9042-03'
+      ],
+      operations: [
+        { opNumber: 10, operationName: 'Raw Material Billet Sawing', machineId: 'Station-Saw #01', status: 'Completed', completedAt: '2026-10-11T11:00:00Z', operatorId: 'OP-102' },
+        { opNumber: 20, operationName: 'CNC Turning', machineId: 'CNC Lathe #04', status: 'Completed', completedAt: '2026-10-11T16:00:00Z', operatorId: 'OP-104' },
+        { opNumber: 30, operationName: 'Heat Treatment', machineId: 'Heat Treat Oven #01', status: 'Completed', completedAt: '2026-10-12T04:00:00Z', operatorId: 'OP-201', holdDurationMinutes: 240, holdTargetRelease: '2026-10-12T08:00:00Z' },
+        { opNumber: 40, operationName: 'Precision Grinding', machineId: 'Precision Grinder #03', status: 'Completed', completedAt: '2026-10-12T14:00:00Z', operatorId: 'OP-109' },
+        { opNumber: 50, operationName: 'Ultrasonic Wash & Deburr', machineId: 'Wash #01', status: 'Completed', completedAt: '2026-10-12T16:00:00Z', operatorId: 'OP-304' },
+        { opNumber: 60, operationName: 'Final PDI & CMM Metrology', machineId: 'CMM #01', status: 'In Review', cycleMinutes: 30 },
+        { opNumber: 70, operationName: 'Dispatch Packing', machineId: 'Gate #01', status: 'Pending' }
+      ]
+    },
+
+    {
+      id: 'TRV-2026-9040',
+      barcode: 'TRV-9040',
+      workOrder: 'WO-44819',
+      partNumber: 'TS-204',
+      partName: 'Aerospace Turbine Main Shaft',
+      heatLot: 'H-8042',
+      batchSize: 20,
+      customer: 'Pratt Aerospace Corp',
+      customerPo: 'PO-PAC-2026-789',
+      releaseDate: '2026-10-10T08:00:00.000Z',
+      targetDispatch: '2026-10-13T17:00:00.000Z',
+      overallStatus: 'Ready for Dispatch Clearance',
+      physicalFloorLocation: 'Finished Goods Bay E',
+      pdiStatus: 'Approved',
+      pdiCompletedAt: '2026-10-13T14:30:00.000Z',
+      pdiInspectionId: 'INSP-9040-CLR',
+      finishedSerialNumbers: [
+        'SN-2026-9040-01', 'SN-2026-9040-02', 'SN-2026-9040-03', 'SN-2026-9040-04'
+      ],
+      operations: [
+        { opNumber: 10, operationName: 'Raw Material Billet Sawing', machineId: 'Station-Saw #01', status: 'Completed', completedAt: '2026-10-10T11:00:00Z', operatorId: 'OP-102' },
+        { opNumber: 20, operationName: 'CNC Turning', machineId: 'CNC Lathe #04', status: 'Completed', completedAt: '2026-10-10T17:00:00Z', operatorId: 'OP-104' },
+        { opNumber: 30, operationName: 'Heat Treatment', machineId: 'Heat Treat Oven #01', status: 'Completed', completedAt: '2026-10-11T05:00:00Z', operatorId: 'OP-201', holdDurationMinutes: 240, holdTargetRelease: '2026-10-11T09:00:00Z' },
+        { opNumber: 40, operationName: 'Precision Grinding', machineId: 'Precision Grinder #03', status: 'Completed', completedAt: '2026-10-11T14:00:00Z', operatorId: 'OP-109' },
+        { opNumber: 50, operationName: 'Ultrasonic Wash & Deburr', machineId: 'Wash #01', status: 'Completed', completedAt: '2026-10-11T16:00:00Z', operatorId: 'OP-304' },
+        { opNumber: 60, operationName: 'Final PDI & CMM Metrology', machineId: 'CMM #01', status: 'Completed', completedAt: '2026-10-13T14:30:00Z', operatorId: 'QA-002' },
+        { opNumber: 70, operationName: 'Dispatch Packing', machineId: 'Gate #01', status: 'Ready for Gate Pass' }
+      ]
+    }
+  ],
+
+  inspections: [
+    {
+      id: 'INSP-9042-REV',
+      travelerId: 'TRV-2026-9042',
+      workOrder: 'WO-44821',
+      partNumber: 'TS-204',
+      heatNumber: 'H-8042',
+      stationId: 'STATION-CMM-01',
+      inspectorId: 'QA-INSP-JOHN (John Reynolds)',
+      gaugeId: 'VC-104',
+      templateId: 'TMPL-TS204-PDI',
+      inspectionType: 'PDI',
+      submittedAt: '2026-10-13T15:20:00.000Z',
+      hasFailures: true,
+      hasCtqFailures: false, // Non-CTQ allows supervisor concession review!
+      remarks: 'Spline section length slightly over nominal by +0.18mm (tolerance max is +0.15mm). Defect photos attached. Does not affect functional fit.',
+      status: 'Pending Review (Out-of-Tolerance)',
+      measurements: [
+        { pinId: 1, label: 'Bearing Journal Outer Diameter', nominal: 45.000, upper: 0.025, lower: -0.010, actual: 45.012, unit: 'mm', isCtq: true, passed: true },
+        { pinId: 2, label: 'Spline Section Overall Length', nominal: 110.00, upper: 0.15, lower: -0.15, actual: 110.18, unit: 'mm', isCtq: false, passed: false, photos: ['/uploads/defects/spline_caliper_reading.jpg', '/uploads/defects/spline_end_view.jpg'] },
+        { pinId: 3, label: 'Mounting Flange Step Thickness', nominal: 22.50, upper: 0.05, lower: -0.05, actual: 22.52, unit: 'mm', isCtq: true, passed: true },
+        { pinId: 4, label: 'Retaining Thread M16x1.5 6H Fit', expected: 'Pass', actual: 'Pass', unit: 'Go/No-Go', isCtq: false, passed: true },
+        { pinId: 5, label: 'Journal Surface Finish Roughness', maxLimit: 0.80, actual: 0.54, unit: 'µm Ra', isCtq: false, passed: true },
+        { pinId: 6, label: 'Deburred Radii & Rust Preventative', expected: 'Pass', actual: 'Pass', unit: 'Visual Pass/Fail', isCtq: false, passed: true }
+      ]
+    },
+    {
+      id: 'INSP-9040-CLR',
+      travelerId: 'TRV-2026-9040',
+      workOrder: 'WO-44819',
+      partNumber: 'TS-204',
+      heatNumber: 'H-8042',
+      stationId: 'STATION-CMM-01',
+      inspectorId: 'QA-002 (David L.)',
+      gaugeId: 'VC-104',
+      templateId: 'TMPL-TS204-PDI',
+      inspectionType: 'PDI',
+      submittedAt: '2026-10-13T14:30:00.000Z',
+      hasFailures: false,
+      hasCtqFailures: false,
+      remarks: '100% dimensions conforming to Rev B blueprint. CMM report attached.',
+      status: 'Approved (In-Spec)',
+      measurements: [
+        { pinId: 1, label: 'Bearing Journal Outer Diameter', nominal: 45.000, upper: 0.025, lower: -0.010, actual: 45.008, unit: 'mm', isCtq: true, passed: true },
+        { pinId: 2, label: 'Spline Section Overall Length', nominal: 110.00, upper: 0.15, lower: -0.15, actual: 110.05, unit: 'mm', isCtq: false, passed: true },
+        { pinId: 3, label: 'Mounting Flange Step Thickness', nominal: 22.50, upper: 0.05, lower: -0.05, actual: 22.49, unit: 'mm', isCtq: true, passed: true },
+        { pinId: 4, label: 'Retaining Thread M16x1.5 6H Fit', expected: 'Pass', actual: 'Pass', unit: 'Go/No-Go', isCtq: false, passed: true },
+        { pinId: 5, label: 'Journal Surface Finish Roughness', maxLimit: 0.80, actual: 0.48, unit: 'µm Ra', isCtq: false, passed: true },
+        { pinId: 6, label: 'Deburred Radii & Rust Preventative', expected: 'Pass', actual: 'Pass', unit: 'Visual Pass/Fail', isCtq: false, passed: true }
+      ]
+    }
+  ],
+
+  mrbCases: [
+    {
+      id: 'MRB-2026-081',
+      travelerId: 'TRV-2026-8802',
+      workOrder: 'WO-43990',
+      partNumber: 'FH-12',
+      batchSize: 10,
+      heatLot: 'H-6621',
+      rejectionReason: 'Total radial runout exceeded drawing limit (0.045mm actual vs 0.020mm max allowable).',
+      quarantinedAt: '2026-10-12T16:00:00.000Z',
+      dispositionStatus: 'Pending MRB Review',
+      notes: 'Quarantined in Digital Rejection Holding Bay 107. Board review scheduled with Plant Manager and Quality Head.'
+    }
+  ],
+
+  gatePasses: [
+    {
+      gatePassId: 'GP-2026-4401',
+      travelerId: 'TRV-2026-8800',
+      workOrder: 'WO-44810',
+      partNumber: 'TS-204',
+      heatLot: 'H-8042',
+      batchSize: 50,
+      serialNumbers: ['SN-8800-01..50'],
+      vehicleNumber: 'KA-04-E-9921',
+      driverName: 'Ramesh Kumar',
+      driverPhone: '+91 98765 43210',
+      destinationCustomer: 'Pratt Aerospace Corp',
+      customerPoNumber: 'PO-PAC-2026-789',
+      issuedAt: '2026-10-12T17:30:00.000Z',
+      issuedBy: 'DISPATCH-CLERK-SITA',
+      digitalSignature: 'ZAPUZA-DIGISIGN-7F8A2D99B1',
+      qrVerificationUrl: 'http://localhost:5173/public/coa/TRV-2026-8800',
+      status: 'Cleared & Dispatched'
+    }
+  ],
+
+  shiftHandovers: [
+    {
+      id: 'SHO-2026-101',
+      timestamp: '2026-10-13T14:00:00.000Z',
+      shiftName: 'Morning to Evening Shift',
+      outgoingSupervisor: 'Devin Vance (Morning Lead)',
+      incomingSupervisor: 'Sarah Chen (Evening Lead)',
+      activeJobsCount: 14,
+      partsProduced: 312,
+      scrapCount: 2,
+      toolWearNotes: 'Insert T02 on CNC #04 due for corner index change after ~40 more cycles. Height gauge HG-12 calibrated.',
+      machineHealthNotes: 'Precision Grinder #03 PM checklist is overdue; station currently locked by system.',
+      openQualityAlerts: 'TRV-9042 submitted with spline length out-of-spec; waiting for supervisor concession review.',
+      outgoingSignature: 'D. Vance',
+      acknowledgedByIncoming: false
+    }
+  ],
+
+  auditLogs: [
+    {
+      id: 'AUD-INITIAL-01',
+      timestamp: '2026-10-13T06:00:00.000Z',
+      userId: 'OP-104',
+      userRole: 'Machinist',
+      action: 'PM_CHECK_COMPLETED',
+      entityType: 'Workstation',
+      entityId: 'CNC-04',
+      details: 'Daily PM and zero-point calibration verified on Haas ST-20.',
+      ipAddress: '192.168.1.104',
+      deviceSerial: 'TAB-CNC-04'
+    },
+    {
+      id: 'AUD-INITIAL-02',
+      timestamp: '2026-10-13T14:30:00.000Z',
+      userId: 'QA-002',
+      userRole: 'QA Floor Inspector',
+      action: 'INSPECTION_SUBMITTED',
+      entityType: 'Inspection',
+      entityId: 'INSP-9040-CLR',
+      details: 'Final PDI completed for TRV-2026-9040: All 6 dimensions verified within drawing limits.',
+      ipAddress: '192.168.1.120',
+      deviceSerial: 'TAB-METROLOGY-01'
+    }
+  ]
+};

@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --industrial-yellow: #f59e0b;
+    --industrial-dark: #0f172a;
+    --industrial-amber: #d97706;
+    --industrial-gray: #1e293b;
+    --industrial-border: #334155;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #0b0f17;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar for rugged industrial look */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f172a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}
+
+/* Tablet Glove-Friendly Touch Utility */
+.glove-touch-button {
+  min-height: 56px;
+  min-width: 56px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.glove-touch-input {
+  min-height: 56px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  touch-action: manipulation;
+}
+
+/* Print layout for gate passes and crate QR labels */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-card {
+    border: 2px solid #000 !important;
+    padding: 20px !important;
+    page-break-inside: avoid;
+  }
+}
+
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 1s ease-in-out infinite;
+}

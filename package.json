@@ -1,0 +1,16 @@
+{
+  "name": "zapuza",
+  "version": "5.0.0",
+  "description": "Zapuza Technologies Factory Operations & Quality Control System",
+  "main": "server/server.js",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "npm --prefix client run dev",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}
