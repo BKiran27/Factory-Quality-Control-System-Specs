@@ -1,0 +1,19 @@
+services:
+  zapuza-factory-os:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zapuza-factory-os
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+    volumes:
+      - zapuza-data:/app/server/data
+      - zapuza-uploads:/app/server/uploads
+
+volumes:
+  zapuza-data:
+  zapuza-uploads:

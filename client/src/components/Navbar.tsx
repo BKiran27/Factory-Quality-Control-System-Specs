@@ -14,7 +14,8 @@ import {
   WifiOff,
   User,
   Radio,
-  RefreshCw
+  RefreshCw,
+  TrendingUp
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { sounds } from '../utils/audio';
@@ -62,6 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'mrb-portal', label: 'MRB Holding Area', icon: Scale },
     { id: 'travelers', label: 'Job Travelers & Holds', icon: RefreshCw },
     { id: 'shipping-interlock', label: 'Dispatch Clearance', icon: Truck },
+    { id: 'spc-analytics', label: 'SPC & Control Charts', icon: TrendingUp },
     { id: 'traceability', label: 'Lineage & Traceability', icon: Search },
     { id: 'shift-handover', label: 'Shift Handover', icon: BookOpen },
     { id: 'audit-trail', label: 'Audit Trail', icon: History }

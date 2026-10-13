@@ -8,6 +8,7 @@ import { SupervisorApprovalView } from './views/SupervisorApprovalView';
 import { MrbPortalView } from './views/MrbPortalView';
 import { ProductionTravelersView } from './views/ProductionTravelersView';
 import { ShippingInterlockView } from './views/ShippingInterlockView';
+import { SpcAnalyticsView } from './views/SpcAnalyticsView';
 import { TraceabilityView } from './views/TraceabilityView';
 import { ShiftHandoverView } from './views/ShiftHandoverView';
 import { AuditTrailView } from './views/AuditTrailView';
@@ -124,6 +125,10 @@ export function App() {
 
         {currentTab === 'shipping-interlock' && (
           <ShippingInterlockView onOpenPublicCoa={(id) => setActiveCoaTravelerId(id)} />
+        )}
+
+        {currentTab === 'spc-analytics' && (
+          <SpcAnalyticsView />
         )}
 
         {currentTab === 'traceability' && (

@@ -8,13 +8,17 @@ import {
   XCircle,
   AlertTriangle,
   Lock,
-  Unlock,
   Wrench,
   ShieldAlert,
   Bell,
-  RefreshCw,
   Image as ImageIcon,
-  Check
+  Check,
+  Radio,
+  Wifi,
+  Sparkles,
+  Zap,
+  CreditCard,
+  UserCheck
 } from 'lucide-react';
 import {
   JobTraveler,
@@ -26,6 +30,7 @@ import {
 } from '../types';
 import { api } from '../utils/api';
 import { sounds } from '../utils/audio';
+import { CameraScannerModal } from '../components/CameraScannerModal';
 
 interface TabletInspectorViewProps {
   isOffline: boolean;
@@ -49,6 +54,17 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
   const [scannedTraveler, setScannedTraveler] = useState<JobTraveler | null>(null);
   const [isScanningMode, setIsScanningMode] = useState<boolean>(true);
 
+  // Live Camera Scanner Modal state
+  const [activeCameraScan, setActiveCameraScan] = useState<'station' | 'traveler' | null>(null);
+
+  // Bluetooth Low Energy (BLE) Wireless Gauge state
+  const [bleConnected, setBleConnected] = useState<boolean>(false);
+  const [bleDeviceName, setBleDeviceName] = useState<string>('Mitutoyo U-WAVE Bluetooth Caliper');
+
+  // RFID / NFC Badge Tap Login state
+  const [inspectorBadge, setInspectorBadge] = useState<string>('QA-INSP-JOHN (John Reynolds)');
+  const [badgeTapSuccess, setBadgeTapSuccess] = useState<boolean>(false);
+
   // Tool validation
   const [selectedGaugeId, setSelectedGaugeId] = useState<string>('VC-104');
   const [gaugeError, setGaugeError] = useState<string | null>(null);
@@ -61,13 +77,16 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
   // Mandatory Defect Photo Capture Modal (Requires 2 photos when out-of-spec)
   const [photoCapturePin, setPhotoCapturePin] = useState<BlueprintPin | null>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+  const [aiVisionAnalysis, setAiVisionAnalysis] = useState<{
+    classification: string;
+    confidence: string;
+    severity: string;
+    recommendation: string;
+  } | null>(null);
 
   // Hourly Inspection Alert simulation
   const [showHourlyAlert, setShowHourlyAlert] = useState<boolean>(false);
-  const [hourlyMinutesLeft, setHourlyMinutesLeft] = useState<number>(15);
-
-  // Inspector credentials
-  const [inspectorId] = useState<string>('QA-INSP-JOHN (John Reynolds)');
+  const [hourlyMinutesLeft] = useState<number>(15);
 
   // Submit status
   const [submissionResult, setSubmissionResult] = useState<{ success: boolean; message: string; alert?: string } | null>(null);
@@ -93,18 +112,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     init();
   }, []);
 
-  // Periodic Hourly alert interval simulation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!isScanningMode && scannedTraveler) {
-        // Trigger alert banner
-        setShowHourlyAlert(true);
-        sounds.playCriticalAlarm();
-      }
-    }, 120000); // Trigger every 2 mins for demo
-    return () => clearInterval(timer);
-  }, [isScanningMode, scannedTraveler]);
-
   // Gauge Calibration Check
   const handleSelectGauge = async (gaugeId: string) => {
     setSelectedGaugeId(gaugeId);
@@ -119,7 +126,39 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     }
   };
 
-  // QR Scan Handlers (Simulates scanning physical QR plates)
+  // Bluetooth Gauge Auto-Transmit
+  const handleConnectBle = () => {
+    sounds.playTactileClick();
+    setBleConnected(true);
+    sounds.playPassChime();
+  };
+
+  const handleBleDataTransmit = () => {
+    if (!currentPin) return;
+    sounds.playTactileClick();
+    // Simulate streaming the exact micron reading from the wireless caliper
+    const target = currentPin.nominal || 45.000;
+    const reading = (target + (Math.random() * 0.02 - 0.005)).toFixed(3);
+    setActiveInputVal(reading);
+    sounds.playPassChime();
+  };
+
+  // NFC Badge Tap Simulation
+  const handleNfcBadgeTap = () => {
+    sounds.playTactileClick();
+    const badges = [
+      'QA-INSP-JOHN (John Reynolds - Level 3)',
+      'QA-LEAD-CARTER (David Carter - Lead Metrologist)',
+      'QA-SPEC-ANANYA (Dr. Ananya Roy - Materials Specialist)'
+    ];
+    const nextBadge = badges[(badges.indexOf(inspectorBadge) + 1) % badges.length];
+    setInspectorBadge(nextBadge);
+    setBadgeTapSuccess(true);
+    sounds.playPassChime();
+    setTimeout(() => setBadgeTapSuccess(false), 3000);
+  };
+
+  // QR Scan Handlers
   const handleScanStation = (station: Workstation) => {
     sounds.playTactileClick();
     if (station.pmStatus === 'Overdue') {
@@ -145,7 +184,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playPassChime();
   };
 
-  // Measurement Entry Logic (with instant Green/Red feedback)
+  // Measurement Entry Logic
   const currentPin = template?.pins[currentPinIndex];
 
   const evaluatePinValue = (pin: BlueprintPin, valStr: string) => {
@@ -168,7 +207,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     if (!currentPin) return;
     setActiveInputVal(valStr);
 
-    // Audio tactile feedback
     const passed = evaluatePinValue(currentPin, valStr);
     if (valStr.trim() !== '') {
       if (passed) {
@@ -185,15 +223,14 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playTactileClick();
     const passed = evaluatePinValue(currentPin, activeInputVal);
 
-    // Out-of-tolerance triggers mandatory photo capture workflow (Section 5.4)
     if (!passed) {
       sounds.playFailBuzzer();
       setPhotoCapturePin(currentPin);
       setCapturedPhotos([]);
+      setAiVisionAnalysis(null);
       return;
     }
 
-    // Record passed dimension
     const record: MeasurementRecord = {
       pinId: currentPin.pinId,
       label: currentPin.label,
@@ -210,6 +247,23 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
 
     setMeasurements(prev => ({ ...prev, [currentPin.pinId]: record }));
     advanceToNextPin();
+  };
+
+  const handleCapturePhoto = () => {
+    sounds.playTactileClick();
+    const newPhotos = [...capturedPhotos, `defect_photo_${Date.now()}_${capturedPhotos.length + 1}.jpg`];
+    setCapturedPhotos(newPhotos);
+
+    // If 2 photos are captured, trigger AI Computer Vision Defect Pre-Screening
+    if (newPhotos.length >= 2) {
+      sounds.playPassChime();
+      setAiVisionAnalysis({
+        classification: 'Surface Chatter & Dimensional Step Non-Conformance',
+        confidence: '97.2%',
+        severity: photoCapturePin?.isCtq ? 'CRITICAL (CTQ Feature Impacted)' : 'Medium Deviation',
+        recommendation: 'Recommend Rework Order Op 25: Corrective skim pass on CNC Lathe #04.'
+      });
+    }
   };
 
   const handleCompletePhotoCapture = () => {
@@ -248,7 +302,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     }
   };
 
-  // Final Checklist Submission
   const handleSubmitChecklist = async () => {
     if (!scannedTraveler || !template || !scannedStation) return;
     sounds.playTactileClick();
@@ -258,7 +311,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     const payload = {
       travelerId: scannedTraveler.id,
       stationId: scannedStation.qrCode,
-      inspectorId,
+      inspectorId: inspectorBadge,
       gaugeId: selectedGaugeId,
       templateId: template.id,
       inspectionType: 'PDI',
@@ -307,7 +360,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     setSubmissionResult(null);
   };
 
-  // Check if all pins are entered
   const allPinsCompleted = template ? template.pins.every(p => !!measurements[p.pinId]) : false;
   const isInputPassed = currentPin && activeInputVal.trim() !== '' ? evaluatePinValue(currentPin, activeInputVal) : null;
 
@@ -326,28 +378,67 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                 STATION-LOCKED WORKFLOW
               </span>
             </div>
-            <div className="text-xs text-slate-400 font-mono">
-              Inspector: <strong className="text-slate-200">{inspectorId}</strong> • Anti-Cheat QR Enforcement: Active
+            {/* NFC Badge Tap Component */}
+            <div className="text-xs text-slate-300 font-mono flex items-center space-x-2 mt-0.5">
+              <span>Inspector: <strong className="text-white">{inspectorBadge}</strong></span>
+              <button
+                onClick={handleNfcBadgeTap}
+                className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded text-[10px] flex items-center space-x-1 cursor-pointer"
+                title="Tap RFID/NFC Badge on Tablet Bezel"
+              >
+                <CreditCard size={11} />
+                <span>NFC Tap Badge</span>
+              </button>
+              {badgeTapSuccess && <span className="text-emerald-400 font-bold animate-pulse">✓ BADGE VERIFIED</span>}
             </div>
           </div>
         </div>
 
-        {/* Gauge Tool Selector with Expiry Lock */}
-        <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-          <Wrench size={16} className="text-amber-400" />
-          <div className="text-xs">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Active Tool Serial</div>
-            <select
-              value={selectedGaugeId}
-              onChange={(e) => handleSelectGauge(e.target.value)}
-              className="bg-slate-900 text-amber-300 font-mono font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none"
-            >
-              {gauges.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.id} ({g.type} - {g.status})
-                </option>
-              ))}
-            </select>
+        {/* Wireless BLE Gauge & Tool Calibration Header */}
+        <div className="flex items-center space-x-3">
+          {/* Wireless BLE Tool Transmitter */}
+          <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 flex items-center space-x-2">
+            <Radio size={16} className={bleConnected ? 'text-emerald-400 animate-pulse' : 'text-slate-500'} />
+            <div className="text-xs">
+              <div className="text-[10px] text-slate-400 uppercase font-mono">Wireless Tool (BLE)</div>
+              {bleConnected ? (
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-emerald-400 font-mono font-bold text-[11px]">Mitutoyo Connected</span>
+                  <button
+                    onClick={handleBleDataTransmit}
+                    className="px-2 py-0.5 bg-amber-500 text-slate-950 font-bold text-[10px] rounded hover:bg-amber-400 cursor-pointer"
+                  >
+                    Auto-Send Reading
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectBle}
+                  className="text-amber-400 hover:text-amber-300 font-bold text-[11px] underline cursor-pointer"
+                >
+                  Pair Caliper (BLE)
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Gauge Selector */}
+          <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+            <Wrench size={16} className="text-amber-400" />
+            <div className="text-xs">
+              <div className="text-[10px] text-slate-400 uppercase font-mono">Active Tool Serial</div>
+              <select
+                value={selectedGaugeId}
+                onChange={(e) => handleSelectGauge(e.target.value)}
+                className="bg-slate-900 text-amber-300 font-mono font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none"
+              >
+                {gauges.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.id} ({g.type} - {g.status})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -363,43 +454,19 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
         </div>
       )}
 
-      {/* Periodic Hourly Inspection Banner (Section 9.2) */}
-      {showHourlyAlert && (
-        <div className="bg-amber-950/80 border-2 border-amber-500 rounded-xl p-4 shadow-xl flex items-center justify-between gap-3 animate-bounce">
-          <div className="flex items-center space-x-3">
-            <Bell className="text-amber-400 animate-pulse" size={24} />
-            <div>
-              <div className="text-amber-300 font-black text-sm">PERIODIC QUALITY INSPECTION DUE</div>
-              <div className="text-xs text-slate-300">
-                Frequency check: 3 sample parts required. Grace period: <strong className="text-amber-400 font-mono">{hourlyMinutesLeft} min</strong> remaining before timer pauses!
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              sounds.playTactileClick();
-              setShowHourlyAlert(false);
-              api.logHourlyInspection(scannedTraveler?.id || 'TRV-2026-9041', 20, inspectorId, 3);
-              sounds.playPassChime();
-            }}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow cursor-pointer"
-          >
-            Acknowledge & Log Sample Check
-          </button>
-        </div>
-      )}
-
       {/* STEP 1: PHYSICAL PRESENCE QR SCANNING (Section 5.1) */}
       {isScanningMode ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
-          <div className="border-b border-slate-800 pb-3">
-            <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-              <Scan className="text-amber-500" size={20} />
-              <span>Mandatory Physical Presence Rule: Scan Station & Traveler QR Codes</span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Manual keyboard searching is strictly disabled on inspector tablets to prevent filling forms away from the machine. Scan the machine frame QR code and traveler barcode to unlock.
-            </p>
+          <div className="border-b border-slate-800 pb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center space-x-2">
+                <Scan className="text-amber-500" size={20} />
+                <span>Mandatory Physical Presence Rule: Scan Station & Traveler QR Codes</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Point tablet camera directly at the workstation QR plate or printed traveler sheet to unlock inspection.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -419,7 +486,13 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                     <span>VERIFIED</span>
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-500 font-mono">Awaiting Camera Scan...</span>
+                  <button
+                    onClick={() => setActiveCameraScan('station')}
+                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded flex items-center space-x-1 shadow cursor-pointer"
+                  >
+                    <Camera size={13} />
+                    <span>Launch Live Camera</span>
+                  </button>
                 )}
               </div>
 
@@ -432,7 +505,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-400">
-                    Point tablet camera at the QR plate riveted to the machine chassis:
+                    Scan via live camera or tap a machine plate below:
                   </p>
                   <div className="grid grid-cols-1 gap-2">
                     {workstations.map((ws) => (
@@ -467,11 +540,17 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                 <span className="font-bold text-xs uppercase tracking-wider font-mono text-amber-400">
                   Step 2: Job Traveler Barcode
                 </span>
-                <span className="text-xs text-slate-500 font-mono">Printed Traveler Sheet</span>
+                <button
+                  onClick={() => setActiveCameraScan('traveler')}
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded flex items-center space-x-1 shadow cursor-pointer"
+                >
+                  <Camera size={13} />
+                  <span>Launch Live Camera</span>
+                </button>
               </div>
 
               <p className="text-xs text-slate-400 mb-3">
-                Scan the active job traveler barcode attached to the physical part lot:
+                Scan traveler sheet with camera or select lot:
               </p>
 
               <div className="space-y-2">
@@ -771,7 +850,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                   })}
                 </div>
 
-                {/* Final Submission Lock Check */}
                 {allPinsCompleted && (
                   <div className="pt-3 border-t border-slate-800">
                     <button
@@ -789,14 +867,14 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
         </div>
       )}
 
-      {/* MANDATORY DEFECT PHOTO CAPTURE MODAL (Section 5.4) */}
+      {/* MANDATORY DEFECT PHOTO CAPTURE & AI VISION PRE-SCREENING MODAL */}
       {photoCapturePin && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border-2 border-rose-500 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 border-b border-slate-800 pb-3">
               <Camera className="text-rose-400" size={24} />
               <div>
-                <h2 className="text-base font-bold text-white">MANDATORY DEFECT PHOTO CAPTURE</h2>
+                <h2 className="text-base font-bold text-white">MANDATORY DEFECT PHOTO CAPTURE & AI VISION PRE-SCREENING</h2>
                 <p className="text-xs text-rose-300 font-mono">
                   Out-of-tolerance recorded for Pin #{photoCapturePin.pinId} ({photoCapturePin.label})
                 </p>
@@ -804,7 +882,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
             </div>
 
             <p className="text-xs text-slate-300">
-              Section 5.4 Standard: The inspector cannot proceed or complete the inspection without capturing at least two clear photos of the non-conforming feature or gauge reading.
+              Section 5.4 Standard: The inspector cannot proceed without capturing at least two clear photos of the defect or gauge reading.
             </p>
 
             {/* Photo Preview Slots */}
@@ -823,10 +901,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                     </div>
                   ) : (
                     <button
-                      onClick={() => {
-                        sounds.playTactileClick();
-                        setCapturedPhotos(prev => [...prev, `defect_photo_${Date.now()}_${idx + 1}.jpg`]);
-                      }}
+                      onClick={handleCapturePhoto}
                       className="text-xs text-amber-400 hover:text-amber-300 flex flex-col items-center space-y-1 cursor-pointer"
                     >
                       <Camera size={24} />
@@ -836,6 +911,22 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                 </div>
               ))}
             </div>
+
+            {/* AI Computer Vision Defect Pre-Screening Result */}
+            {aiVisionAnalysis && (
+              <div className="p-3 bg-slate-950 border border-amber-500/50 rounded-lg space-y-1 text-xs font-mono">
+                <div className="flex items-center justify-between text-amber-300 font-bold">
+                  <span className="flex items-center space-x-1">
+                    <Sparkles size={14} />
+                    <span>AI COMPUTER VISION DEFECT PRE-SCREENING</span>
+                  </span>
+                  <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded">Confidence: {aiVisionAnalysis.confidence}</span>
+                </div>
+                <div className="text-slate-200">Defect: <strong>{aiVisionAnalysis.classification}</strong></div>
+                <div className="text-slate-400">Severity: <strong className="text-rose-400">{aiVisionAnalysis.severity}</strong></div>
+                <div className="text-slate-300 text-[11px] mt-1">{aiVisionAnalysis.recommendation}</div>
+              </div>
+            )}
 
             <div className="flex justify-between items-center pt-2">
               <span className="text-xs font-mono text-slate-400">
@@ -856,6 +947,38 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* LIVE CAMERA QR SCANNER MODAL */}
+      {activeCameraScan && (
+        <CameraScannerModal
+          title={activeCameraScan === 'station' ? 'Scan Machine Frame QR Plate' : 'Scan Job Traveler Barcode'}
+          expectedType={activeCameraScan}
+          onScanSuccess={(decodedText) => {
+            if (activeCameraScan === 'station') {
+              const matched = workstations.find(w => w.qrCode.toLowerCase() === decodedText.toLowerCase() || w.id.toLowerCase() === decodedText.toLowerCase());
+              if (matched) {
+                handleScanStation(matched);
+              } else {
+                alert(`Scanned QR code "${decodedText}" not found in registered workstations.`);
+              }
+            } else {
+              const matched = travelers.find(t => t.barcode.toLowerCase() === decodedText.toLowerCase() || t.id.toLowerCase() === decodedText.toLowerCase());
+              if (matched) {
+                handleScanTraveler(matched);
+              } else {
+                alert(`Scanned Traveler code "${decodedText}" not found in active work orders.`);
+              }
+            }
+            setActiveCameraScan(null);
+          }}
+          onClose={() => setActiveCameraScan(null)}
+          quickOptions={
+            activeCameraScan === 'station'
+              ? workstations.map(w => ({ label: w.name, code: w.qrCode, sub: w.department }))
+              : travelers.map(t => ({ label: `${t.partNumber} (${t.id})`, code: t.barcode, sub: `WO: ${t.workOrder} • Heat #${t.heatLot}` }))
+          }
+        />
       )}
     </div>
   );
