@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="100%" height="100%" style="background-color: #0b1120;">
+  <defs>
+    <!-- Technical CAD Grid -->
+    <pattern id="cadGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.75" />
+    </pattern>
+    <pattern id="cadGridMajor" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#cadGrid)" />
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#334155" stroke-width="1.2" opacity="0.6" />
+    </pattern>
+    <!-- Hatching for section view -->
+    <pattern id="hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#38bdf8" stroke-width="0.8" opacity="0.25" />
+    </pattern>
+    <!-- Glow filter -->
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Grid -->
+  <rect width="1000" height="500" fill="#080e1a" />
+  <rect width="1000" height="500" fill="url(#cadGridMajor)" />
+
+  <!-- Drawing Title Block (Border & Header) -->
+  <rect x="15" y="15" width="970" height="470" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.4" />
+  <rect x="650" y="405" width="335" height="80" fill="#0f172a" stroke="#38bdf8" stroke-width="1.2" />
+  <text x="665" y="425" fill="#94a3b8" font-family="monospace" font-size="11" font-weight="bold">ZAPUZA PRECISION ENGINEERING</text>
+  <text x="665" y="445" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="bold">PART DWG: TS-204-REV B</text>
+  <text x="665" y="465" fill="#cbd5e1" font-family="monospace" font-size="10">MATERIAL: AISI 4340 | SCALE: 1:1</text>
+  <text x="665" y="478" fill="#e2e8f0" font-family="monospace" font-size="9">APPROVAL: QUALITY MANAGER SIGNED</text>
+
+  <!-- Centerline -->
+  <line x1="60" y1="240" x2="940" y2="240" stroke="#f43f5e" stroke-width="1" stroke-dasharray="25, 6, 6, 6" opacity="0.8" />
+
+  <!-- Shaft Profile (Cross-Section & Outer Contour) -->
+  <!-- Section 1: Left End / Chamfer & Thread (x: 80 to 180, dia: 32) -->
+  <rect x="80" y="210" width="100" height="60" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2" />
+  <path d="M 80,210 L 95,210 L 95,270 L 80,270 Z" fill="#1e293b" opacity="0.4" />
+
+  <!-- Section 2: Bearing Journal (Pin 1) (x: 180 to 320, dia: 45) -->
+  <rect x="180" y="195" width="140" height="90" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2.2" />
+
+  <!-- Section 3: Intermediate Relief (x: 320 to 380, dia: 40) -->
+  <rect x="320" y="200" width="60" height="80" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2" />
+
+  <!-- Section 4: Spline Drive Section (Pin 2) (x: 380 to 650, dia: 52) -->
+  <rect x="380" y="188" width="270" height="104" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2.4" />
+  <!-- Spline Teeth Indication Lines -->
+  <line x1="400" y1="188" x2="630" y2="188" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="4, 4" />
+  <line x1="400" y1="292" x2="630" y2="292" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="4, 4" />
+  <line x1="410" y1="205" x2="620" y2="205" stroke="#0284c7" stroke-width="1" stroke-dasharray="8, 6" />
+  <line x1="410" y1="275" x2="620" y2="275" stroke="#0284c7" stroke-width="1" stroke-dasharray="8, 6" />
+
+  <!-- Section 5: Mounting Flange (Pin 3) (x: 650 to 760, dia: 88) -->
+  <rect x="650" y="152" width="110" height="176" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2.5" />
+  <!-- Flange Bolt Hole Indication -->
+  <circle cx="705" cy="175" r="7" fill="#0b1120" stroke="#f59e0b" stroke-width="1.5" />
+  <circle cx="705" cy="305" r="7" fill="#0b1120" stroke="#f59e0b" stroke-width="1.5" />
+
+  <!-- Section 6: Right Retaining Stud & Thread M16 (Pin 4) (x: 760 to 900, dia: 32) -->
+  <rect x="760" y="208" width="140" height="64" fill="url(#hatch)" stroke="#38bdf8" stroke-width="2" />
+  <!-- Thread representation -->
+  <line x1="820" y1="205" x2="890" y2="205" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="2, 4" />
+  <line x1="820" y1="275" x2="890" y2="275" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="2, 4" />
+
+  <!-- Technical Dimension Callouts in CAD Style -->
+  <!-- Dim 1: Bearing Journal Dia Ø45.000 +0.025/-0.010 (Pin 1) -->
+  <line x1="250" y1="140" x2="250" y2="195" stroke="#38bdf8" stroke-width="1" marker-end="url(#arrow)" />
+  <line x1="250" y1="285" x2="250" y2="340" stroke="#38bdf8" stroke-width="1" />
+  <text x="200" y="130" fill="#38bdf8" font-family="monospace" font-size="12" font-weight="bold">Ø45.000 +0.025 / -0.010 [CTQ]</text>
+
+  <!-- Dim 2: Spline Length 110.00 ±0.15 (Pin 2) -->
+  <line x1="380" y1="120" x2="380" y2="188" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3, 3" />
+  <line x1="650" y1="120" x2="650" y2="152" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3, 3" />
+  <line x1="385" y1="125" x2="645" y2="125" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="470" y="115" fill="#38bdf8" font-family="monospace" font-size="12" font-weight="bold">110.00 ±0.15 mm</text>
+
+  <!-- Dim 3: Flange Thickness 22.50 ±0.05 (Pin 3) -->
+  <line x1="650" y1="360" x2="650" y2="328" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3, 3" />
+  <line x1="760" y1="360" x2="760" y2="328" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3, 3" />
+  <line x1="655" y1="355" x2="755" y2="355" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="660" y="375" fill="#38bdf8" font-family="monospace" font-size="12" font-weight="bold">22.50 ±0.05 [CTQ]</text>
+
+  <!-- Dim 4: M16x1.5 6H Thread (Pin 4) -->
+  <text x="800" y="195" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="bold">M16x1.5 6H GO/NOGO</text>
+
+  <!-- Dim 5: Surface Finish Ra 0.8 MAX (Pin 5) -->
+  <path d="M 330,285 L 340,310 L 355,310" fill="none" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="335" y="325" fill="#38bdf8" font-family="monospace" font-size="10">▼ Ra 0.80 MAX</text>
+
+  <!-- Visual indicator labels for blueprint pins -->
+  <g id="visual-reference-decorations" opacity="0.6">
+    <circle cx="80" cy="240" r="4" fill="#38bdf8" />
+    <circle cx="900" cy="240" r="4" fill="#38bdf8" />
+  </g>
+</svg>
