@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Tablet,
   QrCode,
@@ -8,20 +8,13 @@ import {
   XCircle,
   AlertTriangle,
   Lock,
+  Unlock,
   Wrench,
   ShieldAlert,
   Bell,
+  RefreshCw,
   Image as ImageIcon,
-  Check,
-  Radio,
-  Wifi,
-  Sparkles,
-  Zap,
-  CreditCard,
-  UserCheck,
-  Upload,
-  Trash2,
-  RefreshCw
+  Check
 } from 'lucide-react';
 import {
   JobTraveler,
@@ -33,7 +26,6 @@ import {
 } from '../types';
 import { api } from '../utils/api';
 import { sounds } from '../utils/audio';
-import { CameraScannerModal } from '../components/CameraScannerModal';
 
 interface TabletInspectorViewProps {
   isOffline: boolean;
@@ -57,17 +49,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
   const [scannedTraveler, setScannedTraveler] = useState<JobTraveler | null>(null);
   const [isScanningMode, setIsScanningMode] = useState<boolean>(true);
 
-  // Live Camera Scanner Modal state
-  const [activeCameraScan, setActiveCameraScan] = useState<'station' | 'traveler' | null>(null);
-
-  // Bluetooth Low Energy (BLE) Wireless Gauge state
-  const [bleConnected, setBleConnected] = useState<boolean>(false);
-  const [bleDeviceName, setBleDeviceName] = useState<string>('Mitutoyo U-WAVE Bluetooth Caliper');
-
-  // RFID / NFC Badge Tap Login state
-  const [inspectorBadge, setInspectorBadge] = useState<string>('QA-INSP-JOHN (John Reynolds)');
-  const [badgeTapSuccess, setBadgeTapSuccess] = useState<boolean>(false);
-
   // Tool validation
   const [selectedGaugeId, setSelectedGaugeId] = useState<string>('VC-104');
   const [gaugeError, setGaugeError] = useState<string | null>(null);
@@ -80,23 +61,13 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
   // Mandatory Defect Photo Capture Modal (Requires 2 photos when out-of-spec)
   const [photoCapturePin, setPhotoCapturePin] = useState<BlueprintPin | null>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
-  const [aiVisionAnalysis, setAiVisionAnalysis] = useState<{
-    classification: string;
-    confidence: string;
-    severity: string;
-    recommendation: string;
-  } | null>(null);
-
-  // Defect Photo Live Camera & File Stream State
-  const [photoCameraActive, setPhotoCameraActive] = useState<boolean>(false);
-  const [photoCameraError, setPhotoCameraError] = useState<string | null>(null);
-  const photoVideoRef = useRef<HTMLVideoElement | null>(null);
-  const photoStreamRef = useRef<MediaStream | null>(null);
-  const photoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Hourly Inspection Alert simulation
   const [showHourlyAlert, setShowHourlyAlert] = useState<boolean>(false);
-  const [hourlyMinutesLeft] = useState<number>(15);
+  const [hourlyMinutesLeft, setHourlyMinutesLeft] = useState<number>(15);
+
+  // Inspector credentials
+  const [inspectorId] = useState<string>('QA-INSP-JOHN (John Reynolds)');
 
   // Submit status
   const [submissionResult, setSubmissionResult] = useState<{ success: boolean; message: string; alert?: string } | null>(null);
@@ -122,13 +93,25 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     init();
   }, []);
 
+  // Periodic Hourly alert interval simulation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!isScanningMode && scannedTraveler) {
+        // Trigger alert banner
+        setShowHourlyAlert(true);
+        sounds.playCriticalAlarm();
+      }
+    }, 120000); // Trigger every 2 mins for demo
+    return () => clearInterval(timer);
+  }, [isScanningMode, scannedTraveler]);
+
   // Gauge Calibration Check
   const handleSelectGauge = async (gaugeId: string) => {
     setSelectedGaugeId(gaugeId);
     sounds.playTactileClick();
     const res = await api.validateGauge(gaugeId);
     if (!res.valid) {
-      setGaugeError(res.error || 'Tool Calibration Expired');
+      setGaugeError(res.error);
       sounds.playFailBuzzer();
     } else {
       setGaugeError(null);
@@ -136,39 +119,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     }
   };
 
-  // Bluetooth Gauge Auto-Transmit
-  const handleConnectBle = () => {
-    sounds.playTactileClick();
-    setBleConnected(true);
-    sounds.playPassChime();
-  };
-
-  const handleBleDataTransmit = () => {
-    if (!currentPin) return;
-    sounds.playTactileClick();
-    // Simulate streaming the exact micron reading from the wireless caliper
-    const target = currentPin.nominal || 45.000;
-    const reading = (target + (Math.random() * 0.02 - 0.005)).toFixed(3);
-    setActiveInputVal(reading);
-    sounds.playPassChime();
-  };
-
-  // NFC Badge Tap Simulation
-  const handleNfcBadgeTap = () => {
-    sounds.playTactileClick();
-    const badges = [
-      'QA-INSP-JOHN (John Reynolds - Level 3)',
-      'QA-LEAD-CARTER (David Carter - Lead Metrologist)',
-      'QA-SPEC-ANANYA (Dr. Ananya Roy - Materials Specialist)'
-    ];
-    const nextBadge = badges[(badges.indexOf(inspectorBadge) + 1) % badges.length];
-    setInspectorBadge(nextBadge);
-    setBadgeTapSuccess(true);
-    sounds.playPassChime();
-    setTimeout(() => setBadgeTapSuccess(false), 3000);
-  };
-
-  // QR Scan Handlers
+  // QR Scan Handlers (Simulates scanning physical QR plates)
   const handleScanStation = (station: Workstation) => {
     sounds.playTactileClick();
     if (station.pmStatus === 'Overdue') {
@@ -194,7 +145,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playPassChime();
   };
 
-  // Measurement Entry Logic
+  // Measurement Entry Logic (with instant Green/Red feedback)
   const currentPin = template?.pins[currentPinIndex];
 
   const evaluatePinValue = (pin: BlueprintPin, valStr: string) => {
@@ -217,6 +168,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     if (!currentPin) return;
     setActiveInputVal(valStr);
 
+    // Audio tactile feedback
     const passed = evaluatePinValue(currentPin, valStr);
     if (valStr.trim() !== '') {
       if (passed) {
@@ -233,14 +185,15 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playTactileClick();
     const passed = evaluatePinValue(currentPin, activeInputVal);
 
+    // Out-of-tolerance triggers mandatory photo capture workflow (Section 5.4)
     if (!passed) {
       sounds.playFailBuzzer();
       setPhotoCapturePin(currentPin);
       setCapturedPhotos([]);
-      setAiVisionAnalysis(null);
       return;
     }
 
+    // Record passed dimension
     const record: MeasurementRecord = {
       pinId: currentPin.pinId,
       label: currentPin.label,
@@ -257,146 +210,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
 
     setMeasurements(prev => ({ ...prev, [currentPin.pinId]: record }));
     advanceToNextPin();
-  };
-
-  const startDefectCamera = async () => {
-    setPhotoCameraError(null);
-    setPhotoCameraActive(true);
-    sounds.playTactileClick();
-    try {
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-        });
-      } catch {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      }
-      photoStreamRef.current = stream;
-      if (photoVideoRef.current) {
-        photoVideoRef.current.srcObject = stream;
-        photoVideoRef.current.play();
-      }
-    } catch (err: any) {
-      console.warn('Defect camera start error:', err);
-      setPhotoCameraActive(false);
-      setPhotoCameraError('Unable to open live camera. Check permissions or upload/select a photo.');
-    }
-  };
-
-  const stopDefectCamera = () => {
-    if (photoStreamRef.current) {
-      photoStreamRef.current.getTracks().forEach(t => t.stop());
-      photoStreamRef.current = null;
-    }
-    setPhotoCameraActive(false);
-  };
-
-  const snapDefectPhoto = () => {
-    if (!photoVideoRef.current) return;
-    const video = photoVideoRef.current;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0,0,0,0.65)';
-      ctx.fillRect(10, canvas.height - 35, canvas.width - 20, 25);
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'bold 12px monospace';
-      ctx.fillText(`DEFECT AUDIT | PIN #${photoCapturePin?.pinId || ''} | ${new Date().toISOString()}`, 20, canvas.height - 18);
-      
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      sounds.playPassChime();
-      addCapturedPhoto(dataUrl);
-      stopDefectCamera();
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (dataUrl) {
-        sounds.playPassChime();
-        addCapturedPhoto(dataUrl);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSampleDefectPhoto = () => {
-    sounds.playTactileClick();
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 260;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 400, 260);
-
-      // Shaft body
-      ctx.fillStyle = '#334155';
-      ctx.beginPath();
-      ctx.roundRect(40, 50, 320, 160, 10);
-      ctx.fill();
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Flange chatter marks
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2;
-      for (let x = 110; x <= 270; x += 14) {
-        ctx.beginPath();
-        ctx.moveTo(x, 60);
-        ctx.lineTo(x + 6, 200);
-        ctx.stroke();
-      }
-
-      // Defect bounding callout
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(95, 80, 200, 105);
-
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 11px monospace';
-      ctx.fillText('NON-CONFORMANCE DETECTED', 105, 102);
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = '10px monospace';
-      ctx.fillText(`Pin #${photoCapturePin?.pinId}: Chatter Marks`, 105, 120);
-      ctx.fillText(`Actual: ${activeInputVal} mm`, 105, 138);
-      ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, 105, 156);
-    }
-    const sampleUrl = canvas.toDataURL('image/jpeg', 0.85);
-    addCapturedPhoto(sampleUrl);
-  };
-
-  const addCapturedPhoto = (dataUrl: string) => {
-    const newPhotos = [...capturedPhotos, dataUrl];
-    setCapturedPhotos(newPhotos);
-
-    if (newPhotos.length >= 2) {
-      sounds.playPassChime();
-      setAiVisionAnalysis({
-        classification: 'Surface Chatter & Dimensional Step Non-Conformance',
-        confidence: '97.2%',
-        severity: photoCapturePin?.isCtq ? 'CRITICAL (CTQ Feature Impacted)' : 'Medium Deviation',
-        recommendation: 'Recommend Rework Order Op 25: Corrective skim pass on CNC Lathe #04.'
-      });
-    }
-  };
-
-  const removePhoto = (index: number) => {
-    sounds.playTactileClick();
-    const updated = capturedPhotos.filter((_, i) => i !== index);
-    setCapturedPhotos(updated);
-    if (updated.length < 2) {
-      setAiVisionAnalysis(null);
-    }
   };
 
   const handleCompletePhotoCapture = () => {
@@ -435,6 +248,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     }
   };
 
+  // Final Checklist Submission
   const handleSubmitChecklist = async () => {
     if (!scannedTraveler || !template || !scannedStation) return;
     sounds.playTactileClick();
@@ -444,7 +258,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     const payload = {
       travelerId: scannedTraveler.id,
       stationId: scannedStation.qrCode,
-      inspectorId: inspectorBadge,
+      inspectorId,
       gaugeId: selectedGaugeId,
       templateId: template.id,
       inspectionType: 'PDI',
@@ -493,6 +307,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     setSubmissionResult(null);
   };
 
+  // Check if all pins are entered
   const allPinsCompleted = template ? template.pins.every(p => !!measurements[p.pinId]) : false;
   const isInputPassed = currentPin && activeInputVal.trim() !== '' ? evaluatePinValue(currentPin, activeInputVal) : null;
 
@@ -511,67 +326,28 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                 STATION-LOCKED WORKFLOW
               </span>
             </div>
-            {/* NFC Badge Tap Component */}
-            <div className="text-xs text-slate-300 font-mono flex items-center space-x-2 mt-0.5">
-              <span>Inspector: <strong className="text-white">{inspectorBadge}</strong></span>
-              <button
-                onClick={handleNfcBadgeTap}
-                className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded text-[10px] flex items-center space-x-1 cursor-pointer"
-                title="Tap RFID/NFC Badge on Tablet Bezel"
-              >
-                <CreditCard size={11} />
-                <span>NFC Tap Badge</span>
-              </button>
-              {badgeTapSuccess && <span className="text-emerald-400 font-bold animate-pulse">✓ BADGE VERIFIED</span>}
+            <div className="text-xs text-slate-400 font-mono">
+              Inspector: <strong className="text-slate-200">{inspectorId}</strong> • Anti-Cheat QR Enforcement: Active
             </div>
           </div>
         </div>
 
-        {/* Wireless BLE Gauge & Tool Calibration Header */}
-        <div className="flex items-center space-x-3">
-          {/* Wireless BLE Tool Transmitter */}
-          <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 flex items-center space-x-2">
-            <Radio size={16} className={bleConnected ? 'text-emerald-400 animate-pulse' : 'text-slate-500'} />
-            <div className="text-xs">
-              <div className="text-[10px] text-slate-400 uppercase font-mono">Wireless Tool (BLE)</div>
-              {bleConnected ? (
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-emerald-400 font-mono font-bold text-[11px]">Mitutoyo Connected</span>
-                  <button
-                    onClick={handleBleDataTransmit}
-                    className="px-2 py-0.5 bg-amber-500 text-slate-950 font-bold text-[10px] rounded hover:bg-amber-400 cursor-pointer"
-                  >
-                    Auto-Send Reading
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleConnectBle}
-                  className="text-amber-400 hover:text-amber-300 font-bold text-[11px] underline cursor-pointer"
-                >
-                  Pair Caliper (BLE)
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Gauge Selector */}
-          <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-            <Wrench size={16} className="text-amber-400" />
-            <div className="text-xs">
-              <div className="text-[10px] text-slate-400 uppercase font-mono">Active Tool Serial</div>
-              <select
-                value={selectedGaugeId}
-                onChange={(e) => handleSelectGauge(e.target.value)}
-                className="bg-slate-900 text-amber-300 font-mono font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none"
-              >
-                {gauges.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.id} ({g.type} - {g.status})
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Gauge Tool Selector with Expiry Lock */}
+        <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+          <Wrench size={16} className="text-amber-400" />
+          <div className="text-xs">
+            <div className="text-[10px] text-slate-400 uppercase font-mono">Active Tool Serial</div>
+            <select
+              value={selectedGaugeId}
+              onChange={(e) => handleSelectGauge(e.target.value)}
+              className="bg-slate-900 text-amber-300 font-mono font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none"
+            >
+              {gauges.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.id} ({g.type} - {g.status})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -587,19 +363,43 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
         </div>
       )}
 
+      {/* Periodic Hourly Inspection Banner (Section 9.2) */}
+      {showHourlyAlert && (
+        <div className="bg-amber-950/80 border-2 border-amber-500 rounded-xl p-4 shadow-xl flex items-center justify-between gap-3 animate-bounce">
+          <div className="flex items-center space-x-3">
+            <Bell className="text-amber-400 animate-pulse" size={24} />
+            <div>
+              <div className="text-amber-300 font-black text-sm">PERIODIC QUALITY INSPECTION DUE</div>
+              <div className="text-xs text-slate-300">
+                Frequency check: 3 sample parts required. Grace period: <strong className="text-amber-400 font-mono">{hourlyMinutesLeft} min</strong> remaining before timer pauses!
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              sounds.playTactileClick();
+              setShowHourlyAlert(false);
+              api.logHourlyInspection(scannedTraveler?.id || 'TRV-2026-9041', 20, inspectorId, 3);
+              sounds.playPassChime();
+            }}
+            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow cursor-pointer"
+          >
+            Acknowledge & Log Sample Check
+          </button>
+        </div>
+      )}
+
       {/* STEP 1: PHYSICAL PRESENCE QR SCANNING (Section 5.1) */}
       {isScanningMode ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
-          <div className="border-b border-slate-800 pb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-                <Scan className="text-amber-500" size={20} />
-                <span>Mandatory Physical Presence Rule: Scan Station & Traveler QR Codes</span>
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Point tablet camera directly at the workstation QR plate or printed traveler sheet to unlock inspection.
-              </p>
-            </div>
+          <div className="border-b border-slate-800 pb-3">
+            <h2 className="text-lg font-bold text-white flex items-center space-x-2">
+              <Scan className="text-amber-500" size={20} />
+              <span>Mandatory Physical Presence Rule: Scan Station & Traveler QR Codes</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Manual keyboard searching is strictly disabled on inspector tablets to prevent filling forms away from the machine. Scan the machine frame QR code and traveler barcode to unlock.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -619,13 +419,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                     <span>VERIFIED</span>
                   </span>
                 ) : (
-                  <button
-                    onClick={() => setActiveCameraScan('station')}
-                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded flex items-center space-x-1 shadow cursor-pointer"
-                  >
-                    <Camera size={13} />
-                    <span>Launch Live Camera</span>
-                  </button>
+                  <span className="text-xs text-slate-500 font-mono">Awaiting Camera Scan...</span>
                 )}
               </div>
 
@@ -638,7 +432,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-400">
-                    Scan via live camera or tap a machine plate below:
+                    Point tablet camera at the QR plate riveted to the machine chassis:
                   </p>
                   <div className="grid grid-cols-1 gap-2">
                     {workstations.map((ws) => (
@@ -673,17 +467,11 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                 <span className="font-bold text-xs uppercase tracking-wider font-mono text-amber-400">
                   Step 2: Job Traveler Barcode
                 </span>
-                <button
-                  onClick={() => setActiveCameraScan('traveler')}
-                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded flex items-center space-x-1 shadow cursor-pointer"
-                >
-                  <Camera size={13} />
-                  <span>Launch Live Camera</span>
-                </button>
+                <span className="text-xs text-slate-500 font-mono">Printed Traveler Sheet</span>
               </div>
 
               <p className="text-xs text-slate-400 mb-3">
-                Scan traveler sheet with camera or select lot:
+                Scan the active job traveler barcode attached to the physical part lot:
               </p>
 
               <div className="space-y-2">
@@ -983,6 +771,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
                   })}
                 </div>
 
+                {/* Final Submission Lock Check */}
                 {allPinsCompleted && (
                   <div className="pt-3 border-t border-slate-800">
                     <button
@@ -1000,14 +789,14 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
         </div>
       )}
 
-      {/* MANDATORY DEFECT PHOTO CAPTURE & AI VISION PRE-SCREENING MODAL */}
+      {/* MANDATORY DEFECT PHOTO CAPTURE MODAL (Section 5.4) */}
       {photoCapturePin && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border-2 border-rose-500 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 border-b border-slate-800 pb-3">
               <Camera className="text-rose-400" size={24} />
               <div>
-                <h2 className="text-base font-bold text-white">MANDATORY DEFECT PHOTO CAPTURE & AI VISION PRE-SCREENING</h2>
+                <h2 className="text-base font-bold text-white">MANDATORY DEFECT PHOTO CAPTURE</h2>
                 <p className="text-xs text-rose-300 font-mono">
                   Out-of-tolerance recorded for Pin #{photoCapturePin.pinId} ({photoCapturePin.label})
                 </p>
@@ -1015,142 +804,38 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
             </div>
 
             <p className="text-xs text-slate-300">
-              Section 5.4 Standard: The inspector cannot proceed without capturing at least two clear photos of the defect or gauge reading.
+              Section 5.4 Standard: The inspector cannot proceed or complete the inspection without capturing at least two clear photos of the non-conforming feature or gauge reading.
             </p>
 
-            {/* Live Camera Viewfinder (when active) */}
-            {photoCameraActive ? (
-              <div className="relative aspect-video bg-black rounded-xl overflow-hidden border-2 border-rose-500 shadow-xl flex items-center justify-center">
-                <video
-                  ref={photoVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-
-                {/* Laser Alignment Reticle */}
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                  <div className="w-48 h-32 border-2 border-amber-400/80 rounded relative">
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-amber-400" />
-                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-amber-400" />
-                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-amber-400" />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-amber-400" />
-                    <div className="w-full h-0.5 bg-rose-500/80 absolute top-1/2 -translate-y-1/2" />
-                  </div>
-                  <span className="mt-2 text-[10px] font-mono text-amber-300 bg-slate-900/90 px-2 py-0.5 rounded border border-amber-500/30">
-                    Focus Camera on Defect or Caliper Display
-                  </span>
-                </div>
-
-                {/* Floating Snap & Cancel Buttons */}
-                <div className="absolute bottom-3 inset-x-0 flex justify-center space-x-3 z-10">
-                  <button
-                    onClick={snapDefectPhoto}
-                    className="px-4 py-1.5 bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs rounded-full shadow-lg flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Camera size={14} />
-                    <span>Snap Photo #{capturedPhotos.length + 1}</span>
-                  </button>
-                  <button
-                    onClick={stopDefectCamera}
-                    className="px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {photoCameraError && (
-              <div className="p-2.5 bg-amber-950/40 border border-amber-600/50 rounded-lg text-xs text-amber-200 flex items-center space-x-2">
-                <AlertTriangle size={15} className="text-amber-400 shrink-0" />
-                <span>{photoCameraError}</span>
-              </div>
-            )}
-
-            {/* Photo Preview Slots (2 Required) */}
+            {/* Photo Preview Slots */}
             <div className="grid grid-cols-2 gap-3">
               {[0, 1].map((idx) => (
                 <div
                   key={idx}
-                  className="aspect-video bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg relative overflow-hidden flex flex-col items-center justify-center p-2 text-center"
+                  className="aspect-video bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg flex flex-col items-center justify-center p-2 text-center overflow-hidden"
                 >
                   {capturedPhotos[idx] ? (
-                    <div className="relative w-full h-full group">
-                      <img
-                        src={capturedPhotos[idx]}
-                        alt={`Defect ${idx + 1}`}
-                        className="w-full h-full object-cover rounded"
-                      />
-                      <div className="absolute top-1 left-1 bg-slate-950/80 text-emerald-400 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold border border-emerald-500/30">
-                        Photo #{idx + 1} ✓
+                    <div className="relative w-full h-full">
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-xs text-emerald-400 font-mono">
+                        <ImageIcon size={20} className="mr-1" />
+                        <span>Defect Photo #{idx + 1} Captured</span>
                       </div>
-                      <button
-                        onClick={() => removePhoto(idx)}
-                        className="absolute top-1 right-1 p-1 bg-rose-950/90 hover:bg-rose-800 text-rose-300 rounded border border-rose-700 cursor-pointer"
-                        title="Retake or Delete Photo"
-                      >
-                        <Trash2 size={13} />
-                      </button>
                     </div>
                   ) : (
-                    <div className="space-y-1.5 w-full flex flex-col items-center justify-center">
-                      <div className="text-[11px] font-mono text-slate-400">Photo #{idx + 1} Slot</div>
-                      <div className="flex flex-col gap-1 w-full max-w-[150px]">
-                        <button
-                          onClick={startDefectCamera}
-                          className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
-                        >
-                          <Camera size={12} />
-                          <span>Live Camera</span>
-                        </button>
-                        <button
-                          onClick={() => photoFileInputRef.current?.click()}
-                          className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
-                        >
-                          <Upload size={11} />
-                          <span>Upload / Roll</span>
-                        </button>
-                        <button
-                          onClick={handleSampleDefectPhoto}
-                          className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
-                        >
-                          <Sparkles size={11} />
-                          <span>Demo Sample</span>
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => {
+                        sounds.playTactileClick();
+                        setCapturedPhotos(prev => [...prev, `defect_photo_${Date.now()}_${idx + 1}.jpg`]);
+                      }}
+                      className="text-xs text-amber-400 hover:text-amber-300 flex flex-col items-center space-y-1 cursor-pointer"
+                    >
+                      <Camera size={24} />
+                      <span className="font-bold">Capture Photo #{idx + 1}</span>
+                    </button>
                   )}
                 </div>
               ))}
             </div>
-
-            {/* Hidden File Picker */}
-            <input
-              ref={photoFileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-
-            {/* AI Computer Vision Defect Pre-Screening Result */}
-            {aiVisionAnalysis && (
-              <div className="p-3 bg-slate-950 border border-amber-500/50 rounded-lg space-y-1 text-xs font-mono">
-                <div className="flex items-center justify-between text-amber-300 font-bold">
-                  <span className="flex items-center space-x-1">
-                    <Sparkles size={14} />
-                    <span>AI COMPUTER VISION DEFECT PRE-SCREENING</span>
-                  </span>
-                  <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded">Confidence: {aiVisionAnalysis.confidence}</span>
-                </div>
-                <div className="text-slate-200">Defect: <strong>{aiVisionAnalysis.classification}</strong></div>
-                <div className="text-slate-400">Severity: <strong className="text-rose-400">{aiVisionAnalysis.severity}</strong></div>
-                <div className="text-slate-300 text-[11px] mt-1">{aiVisionAnalysis.recommendation}</div>
-              </div>
-            )}
 
             <div className="flex justify-between items-center pt-2">
               <span className="text-xs font-mono text-slate-400">
@@ -1171,38 +856,6 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
             </div>
           </div>
         </div>
-      )}
-
-      {/* LIVE CAMERA QR SCANNER MODAL */}
-      {activeCameraScan && (
-        <CameraScannerModal
-          title={activeCameraScan === 'station' ? 'Scan Machine Frame QR Plate' : 'Scan Job Traveler Barcode'}
-          expectedType={activeCameraScan}
-          onScanSuccess={(decodedText) => {
-            if (activeCameraScan === 'station') {
-              const matched = workstations.find(w => w.qrCode.toLowerCase() === decodedText.toLowerCase() || w.id.toLowerCase() === decodedText.toLowerCase());
-              if (matched) {
-                handleScanStation(matched);
-              } else {
-                alert(`Scanned QR code "${decodedText}" not found in registered workstations.`);
-              }
-            } else {
-              const matched = travelers.find(t => t.barcode.toLowerCase() === decodedText.toLowerCase() || t.id.toLowerCase() === decodedText.toLowerCase());
-              if (matched) {
-                handleScanTraveler(matched);
-              } else {
-                alert(`Scanned Traveler code "${decodedText}" not found in active work orders.`);
-              }
-            }
-            setActiveCameraScan(null);
-          }}
-          onClose={() => setActiveCameraScan(null)}
-          quickOptions={
-            activeCameraScan === 'station'
-              ? workstations.map(w => ({ label: w.name, code: w.qrCode, sub: w.department }))
-              : travelers.map(t => ({ label: `${t.partNumber} (${t.id})`, code: t.barcode, sub: `WO: ${t.workOrder} • Heat #${t.heatLot}` }))
-          }
-        />
       )}
     </div>
   );

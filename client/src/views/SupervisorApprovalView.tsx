@@ -377,28 +377,6 @@ export const SupervisorApprovalView: React.FC = () => {
                 />
               </div>
 
-              {/* 21 CFR Part 11 / AS9100 Electronic Signature & Cryptographic PIN */}
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-2">
-                <div className="flex items-center space-x-1.5 text-slate-200 font-bold">
-                  <ShieldAlert size={14} className="text-amber-400" />
-                  <span>21 CFR Part 11 & AS9100 Cryptographic E-Signature</span>
-                </div>
-                <div>
-                  <label className="block text-slate-400 text-[11px] mb-1">Enter Supervisor E-Signature Security PIN (Default: 8842) *</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••"
-                    maxLength={4}
-                    defaultValue="8842"
-                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-amber-300 font-mono tracking-widest text-center font-bold"
-                  />
-                </div>
-                <div className="text-[10px] text-slate-500 font-mono">
-                  By clicking submit, I certify that I have conducted an engineering review and legally sign this record with cryptographic hash SHA-256.
-                </div>
-              </div>
-
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded text-[11px] text-amber-300 font-mono">
                 Flag: This concession will be permanently linked to Component Serial Numbers and recorded in the audit trail.
               </div>
@@ -415,7 +393,7 @@ export const SupervisorApprovalView: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded cursor-pointer"
                 >
-                  Authorize & Digitally Sign Concession
+                  Issue Concession Release
                 </button>
               </div>
             </form>

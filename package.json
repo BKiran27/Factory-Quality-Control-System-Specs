@@ -6,8 +6,6 @@
   "scripts": {
     "server": "node server/server.js",
     "client": "npm --prefix client run dev",
-    "build": "npm --prefix client run build",
-    "deploy": "npm run build && npx gh-pages -d client/dist -b gh-pages",
     "start": "node server/server.js"
   },
   "dependencies": {

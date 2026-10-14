@@ -14,13 +14,10 @@ import {
   WifiOff,
   User,
   Radio,
-  RefreshCw,
-  TrendingUp,
-  RotateCcw
+  RefreshCw
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { sounds } from '../utils/audio';
-import { api } from '../utils/api';
 
 interface NavbarProps {
   currentTab: string;
@@ -33,6 +30,7 @@ interface NavbarProps {
   setIsOffline: (offline: boolean) => void;
   pendingSyncCount: number;
   onSync: () => void;
+  onOpenComplianceGuide: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -45,7 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isOffline,
   setIsOffline,
   pendingSyncCount,
-  onSync
+  onSync,
+  onOpenComplianceGuide
 }) => {
   const roles: UserRole[] = [
     'Plant Manager',
@@ -65,7 +64,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'mrb-portal', label: 'MRB Holding Area', icon: Scale },
     { id: 'travelers', label: 'Job Travelers & Holds', icon: RefreshCw },
     { id: 'shipping-interlock', label: 'Dispatch Clearance', icon: Truck },
-    { id: 'spc-analytics', label: 'SPC & Control Charts', icon: TrendingUp },
     { id: 'traceability', label: 'Lineage & Traceability', icon: Search },
     { id: 'shift-handover', label: 'Shift Handover', icon: BookOpen },
     { id: 'audit-trail', label: 'Audit Trail', icon: History }
@@ -86,7 +84,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-emerald-400 font-mono hidden sm:inline">Zero Defect Escape Active</span>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          {/* SOP Compliance & Walkthrough Modal Launcher */}
+          <button
+            onClick={() => {
+              sounds.playTactileClick();
+              onOpenComplianceGuide();
+            }}
+            className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded font-mono text-[11px] bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25 transition-colors cursor-pointer"
+            title="Open SOP Standard v5.0 Requirements & Live Demonstration Walkthrough Guide"
+          >
+            <BookOpen size={12} className="text-amber-400" />
+            <span>SOP & Demo Guide</span>
+          </button>
+
           {/* Offline/Online Simulation Switch */}
           <button
             onClick={() => {
@@ -130,23 +141,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             🧤 Glove Mode: {gloveMode ? 'ON (Rugged UI)' : 'OFF'}
-          </button>
-
-          {/* Reset Demo Data Button */}
-          <button
-            onClick={() => {
-              if (window.confirm('Reset all factory data and restore initial shopfloor seed records?')) {
-                sounds.playTactileClick();
-                api.resetDatabase();
-                sounds.playPassChime();
-                window.location.reload();
-              }
-            }}
-            className="flex items-center space-x-1 px-2 py-0.5 rounded font-mono text-[11px] bg-slate-850 hover:bg-slate-750 text-slate-300 border border-slate-700 cursor-pointer transition-colors"
-            title="Restore fresh factory seed database and clear local modifications"
-          >
-            <RotateCcw size={11} className="text-amber-400" />
-            <span>Reset Demo Data</span>
           </button>
 
           {/* Role Dropdown */}

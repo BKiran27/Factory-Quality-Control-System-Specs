@@ -19,9 +19,10 @@ import { sounds } from '../utils/audio';
 interface DashboardViewProps {
   onNavigate: (tab: string) => void;
   gloveMode: boolean;
+  onOpenComplianceGuide?: () => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, gloveMode }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, gloveMode, onOpenComplianceGuide }) => {
   const [workstations, setWorkstations] = useState<Workstation[]>([]);
   const [travelers, setTravelers] = useState<JobTraveler[]>([]);
   const [bottlenecks, setBottlenecks] = useState<{ stations: { stationId: string; stationName: string; queueDepth: number; status: string; utilizationRate: number; currentCycleMin: number; }[] }>({ stations: [] });
@@ -95,6 +96,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, gloveM
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {onOpenComplianceGuide && (
+              <button
+                onClick={() => {
+                  sounds.playTactileClick();
+                  onOpenComplianceGuide();
+                }}
+                className="flex items-center space-x-2 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/60 font-bold text-sm rounded-lg shadow transition-all cursor-pointer"
+              >
+                <span>SOP Standards & Demo Matrix</span>
+              </button>
+            )}
             <button
               onClick={() => onNavigate('tablet-inspector')}
               className="flex items-center space-x-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-lg shadow-lg shadow-amber-500/20 transition-all cursor-pointer"

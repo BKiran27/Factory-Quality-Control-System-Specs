@@ -8,11 +8,11 @@ import { SupervisorApprovalView } from './views/SupervisorApprovalView';
 import { MrbPortalView } from './views/MrbPortalView';
 import { ProductionTravelersView } from './views/ProductionTravelersView';
 import { ShippingInterlockView } from './views/ShippingInterlockView';
-import { SpcAnalyticsView } from './views/SpcAnalyticsView';
 import { TraceabilityView } from './views/TraceabilityView';
 import { ShiftHandoverView } from './views/ShiftHandoverView';
 import { AuditTrailView } from './views/AuditTrailView';
 import { PublicCoaModal } from './views/PublicCoaModal';
+import { ComplianceGuideModal } from './components/ComplianceGuideModal';
 import { UserRole } from './types';
 import { api } from './utils/api';
 import { sounds } from './utils/audio';
@@ -24,6 +24,7 @@ export function App() {
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
   const [activeCoaTravelerId, setActiveCoaTravelerId] = useState<string | null>(null);
+  const [showComplianceGuide, setShowComplianceGuide] = useState<boolean>(false);
 
   // Check offline queue in localStorage
   const checkSyncCount = () => {
@@ -87,12 +88,17 @@ export function App() {
         setIsOffline={setIsOffline}
         pendingSyncCount={pendingSyncCount}
         onSync={handleSync}
+        onOpenComplianceGuide={() => setShowComplianceGuide(true)}
       />
 
       {/* Main View Area */}
       <main className="flex-1 pb-16">
         {currentTab === 'dashboard' && (
-          <DashboardView onNavigate={setCurrentTab} gloveMode={gloveMode} />
+          <DashboardView
+            onNavigate={setCurrentTab}
+            gloveMode={gloveMode}
+            onOpenComplianceGuide={() => setShowComplianceGuide(true)}
+          />
         )}
 
         {currentTab === 'raw-material' && (
@@ -127,10 +133,6 @@ export function App() {
           <ShippingInterlockView onOpenPublicCoa={(id) => setActiveCoaTravelerId(id)} />
         )}
 
-        {currentTab === 'spc-analytics' && (
-          <SpcAnalyticsView />
-        )}
-
         {currentTab === 'traceability' && (
           <TraceabilityView onOpenPublicCoa={(id) => setActiveCoaTravelerId(id)} />
         )}
@@ -143,6 +145,13 @@ export function App() {
           <AuditTrailView />
         )}
       </main>
+
+      {/* Compliance & SOP Guide Modal */}
+      <ComplianceGuideModal
+        isOpen={showComplianceGuide}
+        onClose={() => setShowComplianceGuide(false)}
+        onNavigateTab={(tabId) => setCurrentTab(tabId)}
+      />
 
       {/* Customer Certificate of Analysis (CoA) Modal when scanning crate QR */}
       {activeCoaTravelerId && (
