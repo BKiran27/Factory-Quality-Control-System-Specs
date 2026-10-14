@@ -4,24 +4,16 @@
   <img src="https://img.shields.io/badge/System%20Version-5.0%20Comprehensive-amber.svg?style=for-the-badge&logo=shield" alt="Version 5.0" />
   <img src="https://img.shields.io/badge/Certification-AS9100D%20%7C%20ISO%209001%3A2015-emerald.svg?style=for-the-badge" alt="AS9100D Certified" />
   <img src="https://img.shields.io/badge/Runtime-Node.js%20v24%20%2B%20React%2019-blue.svg?style=for-the-badge&logo=react" alt="Stack" />
-  <img src="https://img.shields.io/badge/Status-100%25%20Operational-green.svg?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Deployment-GitHub%20Pages%20Live-brightgreen.svg?style=for-the-badge&logo=github" alt="Deployment" />
 </p>
 
 ---
 
-### 🔗 Live Working Access Links
+### 🌐 Live Production Application
 
-| Service | Working Direct Link | Purpose |
-| :--- | :--- | :--- |
-| **Main Web Application & Portal** | **[http://localhost:5000](http://localhost:5000)** | Unified production management, floor dashboard, inspector tablet, and clearance portal |
-| **Vite Hot-Reload Dev Server** | **[http://localhost:5173](http://localhost:5173)** | Development interface with instant client hot module reloading |
-| **System Health Check API** | **[http://localhost:5000/api/health](http://localhost:5000/api/health)** | Live system status, plant identification, and timestamp |
-| **Infrastructure & Calibration Register** | **[http://localhost:5000/api/infrastructure](http://localhost:5000/api/infrastructure)** | Workstations, daily PM statuses, parts register, and gauge calibration records |
-| **Job Travelers API** | **[http://localhost:5000/api/job-travelers](http://localhost:5000/api/job-travelers)** | Digital production travelers, active operation routing, and hold countdown states |
-| **Shipping Interlock Status (Cleared Lot)** | **[http://localhost:5000/api/shipping/check-interlock/TRV-2026-9040](http://localhost:5000/api/shipping/check-interlock/TRV-2026-9040)** | Verifies all 3 mandatory gates passed for dispatch clearance |
-| **Shipping Interlock Status (Lockout Active)** | **[http://localhost:5000/api/shipping/check-interlock/TRV-2026-9041](http://localhost:5000/api/shipping/check-interlock/TRV-2026-9041)** | Demonstrates the high-visibility gate lockout when cooling holds or ops are pending |
-| **Customer Certificate of Analysis (CoA)** | **[http://localhost:5000/api/public/coa/TRV-2026-9040](http://localhost:5000/api/public/coa/TRV-2026-9040)** | Digital Birth Certificate rendered when customer scans shipping crate QR code |
-| **Tamper-Proof Audit Trail API** | **[http://localhost:5000/api/audit-logs](http://localhost:5000/api/audit-logs)** | Immutable WORM log of every measurement, approval, concession, and PM check |
+| Service | Direct Working Link |
+| :--- | :--- |
+| **Main Web Application & Portal** | **[https://bkiran27.github.io/Factory-Quality-Control-System-Specs/](https://bkiran27.github.io/Factory-Quality-Control-System-Specs/)** |
 
 ---
 
@@ -59,23 +51,23 @@ By establishing an immediate, locked digital boundary at every workstation, the 
 
 ## 🧪 Quick Demonstration Walkthroughs
 
-Follow these step-by-step scenarios to test the system's real-time digital boundaries and interlocks:
+Follow these step-by-step scenarios to test the system's real-time digital boundaries and interlocks on the **[Main Web Application & Portal](https://bkiran27.github.io/Factory-Quality-Control-System-Specs/)**:
 
 ### 1. Test Machine PM Lock
-- Open the **[Dashboard](http://localhost:5000)**.
+- Open the **Dashboard** tab.
 - Note that **Precision Grinder #03** is highlighted in red with an active **"PM OVERDUE"** badge and job selection disabled.
 - Click **"Sign-off PM & Unlock"**.
 - *Result:* Station status turns to **VERIFIED**, zero-point is locked, and production job selection is unlocked with an immutable audit entry logged.
 
 ### 2. Test Tool Calibration Lock
-- Navigate to the **[Inspector Tablet](http://localhost:5000)** view (or switch role to **QA Floor Inspector**).
+- Navigate to the **Inspector Tablet** view (or switch role to **QA Floor Inspector**).
 - Locate the **Active Tool Serial** selector in the top bar.
 - Select expired caliper **`VC-99` (Insize Digital Caliper - Expired 2026-09-30)**.
 - *Result:* Screen displays an immediate alert banner: **`TOOL CALIBRATION EXPIRED - MEASUREMENT ENTRY BLOCKED`** and instructs the worker to obtain a calibrated tool from the crib.
 - Switch back to **`VC-104` (Mitutoyo Caliper - Valid)** to instantly clear the error.
 
 ### 3. Test Mandatory QR Presence Scan
-- On the **[Inspector Tablet](http://localhost:5000)**, observe the two-step verification workflow.
+- On the **Inspector Tablet**, observe the two-step verification workflow.
 - **Step 1:** Under *Machine Frame QR Code*, click **`CNC-04` (Haas ST-20)**. The station is verified.
 - **Step 2:** Under *Job Traveler Barcode*, click **`TRV-2026-9041`**.
 - *Result:* The physical presence lock is satisfied and the tablet immediately transitions to the step-by-step locked inspection checklist.
@@ -87,13 +79,13 @@ Follow these step-by-step scenarios to test the system's real-time digital bound
   - Click **"Take Mandatory Defect Photos"**: The tablet opens the modal requiring **two distinct photos** before allowing the inspector to proceed.
 
 ### 5. Test Cooling Hold Interlock
-- Navigate to **[Job Travelers & Holds](http://localhost:5000)** and select **`TRV-2026-9041`**.
+- Navigate to **Job Travelers & Holds** and select **`TRV-2026-9041`**.
 - Observe that **Op 30 (Heat Treatment & Carburizing)** was completed with a **4.0-Hour Mandatory Cooling Hold** that is currently counting down.
 - Attempt to click **"Advance Op 40 (Precision Grinding)"**.
 - *Result:* System triggers the high-visibility red banner: **`SECTION 8.2 AUTOMATED COOLING HOLD INTERLOCK ACTIVE (X min remaining)`**, preventing the machinist from running grinding operations until thermal cooling reaches zero.
 
 ### 6. Test Shipping Gate Interlock
-- Navigate to **[Dispatch Clearance](http://localhost:5000)**.
+- Navigate to **Dispatch Clearance**.
 - Select traveler **`TRV-2026-9041`**: Observe that the system displays **`HIGH-VISIBILITY GATE LOCKOUT ACTIVE`** because operations and cooling holds are incomplete. The Gate Pass form is disabled.
 - Select traveler **`TRV-2026-9040`** (which has 100% ops complete, cooling holds fulfilled, and PDI approved):
   - *Result:* Displays **`ALL GATES CLEARED (UNLOCKED)`**.
@@ -101,10 +93,10 @@ Follow these step-by-step scenarios to test the system's real-time digital bound
   - Click **"Print Customer Crate Label"** to view and print the weatherproof shipping QR label with digital signature.
 
 ### 7. Test Traceability & Customer CoA
-- Navigate to **[Lineage & Traceability](http://localhost:5000)**:
+- Navigate to **Lineage & Traceability**:
   - **Forward Recall:** Enter Heat Lot **`H-8042`** and click *Trace Lineage*. The system lists all affected work orders, parts manufactured, and dispatched customer shipping crates.
   - **Backward Field Traceability:** Switch to Backward mode, enter **`TRV-2026-9040`**, and click *Trace Lineage*. The full manufacturing birth certificate is displayed.
-  - Click **"Export Certified CoA Document"** (or view **[Sample CoA Direct Link](http://localhost:5000/api/public/coa/TRV-2026-9040)**) to open the digital Certificate of Analysis with raw material spectro chemistry, actual measurements, and authorized QA signatures.
+  - Click **"Export Certified CoA Document"** to open the digital Certificate of Analysis with raw material spectro chemistry, actual measurements, and authorized QA signatures.
 
 ---
 
@@ -174,57 +166,6 @@ flowchart TD
 
 ---
 
-## 🔌 Complete REST API Reference
-
-All endpoints return JSON and are integrated with the immutable audit log:
-
-### Infrastructure & Registry
-- `GET /api/health` — System status, plant code, and ISO certification metadata.
-- `GET /api/infrastructure` — Master list of factories, departments, workstations, gauges, and parts.
-- `POST /api/workstations/:id/pm-check` — Sign off daily preventive maintenance and zero-point calibration.
-- `GET /api/gauges/:id/validate` — Validates gauge calibration expiry status; returns lock if expired.
-
-### Raw Material Dock Intake & MTC
-- `GET /api/raw-materials` — All raw intake records and MTC certificates.
-- `POST /api/raw-materials` — Log new heat intake with chemical spectro and mechanical properties.
-- `POST /api/raw-materials/:id/verify` — Clear material to store or reject with Supplier Non-Conformance Report (SNCR).
-
-### PDI Templates & CAD Pinning
-- `GET /api/templates` — Inspection templates and pinned CAD schematics.
-- `POST /api/templates` — Create or update template revision with coordinate pins and CTQ tags.
-
-### Production Travelers & Hold Timers
-- `GET /api/job-travelers` — Active travelers, current operations, and hold timer states.
-- `POST /api/job-travelers/:id/complete-operation` — Enforce strict sequential sign-off and cooling holds.
-- `POST /api/job-travelers/:id/first-piece-signoff` — Release machine station from Setup Mode.
-- `POST /api/job-travelers/:id/hourly-inspection` — Log periodic frequency inspection samples.
-
-### Tablet Floor Inspections
-- `POST /api/inspections/submit` — Submit step-by-step measurements under dual QR station lock.
-- `GET /api/inspections` — Historical inspection submissions.
-
-### Supervisor Queue & MRB Dispositions
-- `GET /api/supervisor/queue` — Pending inspection reviews.
-- `POST /api/supervisor/decision` — Approve, grant conditional concession (non-CTQ only), or quarantine.
-- `GET /api/mrb` — Quarantined lots in Digital Rejection Holding Bay 107.
-- `POST /api/mrb/:id/disposition` — Execute Rework Order, Scrap Write-Off, Return to Vendor, or Customer Waiver.
-
-### Dispatch Clearance & Customer Certificates
-- `GET /api/shipping/check-interlock/:travelerId` — Verify the 3 mandatory shipping gate rules.
-- `POST /api/shipping/generate-gate-pass` — Issue transport gate pass and crate QR verification label.
-- `GET /api/public/coa/:travelerId` — Public/customer-facing authenticated Certificate of Analysis (CoA).
-
-### Traceability, Handovers & Audit Logs
-- `GET /api/traceability/forward/:heatNumber` — Forward supplier recall mapping.
-- `GET /api/traceability/backward/:serialNumber` — Backward customer field birth certificate.
-- `GET /api/shift-handovers` — Shift handover history.
-- `POST /api/shift-handovers` — File shift handover form.
-- `POST /api/shift-handovers/:id/acknowledge` — Digital signature acknowledgment by incoming supervisor.
-- `GET /api/audit-logs` — Immutable Write-Once Read-Many (WORM) audit trail.
-- `GET /api/bottlenecks` — Live shopfloor queue depth and station utilization metrics.
-
----
-
 ## 🛠️ Local Installation & Development
 
 ### 1. Prerequisites
@@ -233,8 +174,9 @@ All endpoints return JSON and are integrated with the immutable audit log:
 
 ### 2. Setup & Installation
 ```bash
-# Clone or navigate to the repository
-cd Zapuza
+# Clone the repository
+git clone https://github.com/BKiran27/Factory-Quality-Control-System-Specs.git
+cd Factory-Quality-Control-System-Specs
 
 # Install backend dependencies
 npm install
@@ -245,18 +187,13 @@ npm install
 cd ..
 ```
 
-### 3. Running Both Servers
+### 3. Running Locally
 ```bash
-# Start Backend API & Production Server (Port 5000)
+# Start Backend API & Production Server
 npm run server
 
-# In a second terminal, start the Vite Dev Server (Port 5173)
+# In a second terminal, start the Vite Dev Server
 npm run client
-```
-
-Or run the full production application directly on **`http://localhost:5000`**:
-```bash
-node server/server.js
 ```
 
 ---

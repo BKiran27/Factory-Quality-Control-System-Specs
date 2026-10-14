@@ -111,7 +111,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playTactileClick();
     const res = await api.validateGauge(gaugeId);
     if (!res.valid) {
-      setGaugeError(res.error);
+      setGaugeError(res.error || 'Calibration expired or invalid');
       sounds.playFailBuzzer();
     } else {
       setGaugeError(null);
