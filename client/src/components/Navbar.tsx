@@ -15,10 +15,12 @@ import {
   User,
   Radio,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  RotateCcw
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { sounds } from '../utils/audio';
+import { api } from '../utils/api';
 
 interface NavbarProps {
   currentTab: string;
@@ -128,6 +130,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             🧤 Glove Mode: {gloveMode ? 'ON (Rugged UI)' : 'OFF'}
+          </button>
+
+          {/* Reset Demo Data Button */}
+          <button
+            onClick={() => {
+              if (window.confirm('Reset all factory data and restore initial shopfloor seed records?')) {
+                sounds.playTactileClick();
+                api.resetDatabase();
+                sounds.playPassChime();
+                window.location.reload();
+              }
+            }}
+            className="flex items-center space-x-1 px-2 py-0.5 rounded font-mono text-[11px] bg-slate-850 hover:bg-slate-750 text-slate-300 border border-slate-700 cursor-pointer transition-colors"
+            title="Restore fresh factory seed database and clear local modifications"
+          >
+            <RotateCcw size={11} className="text-amber-400" />
+            <span>Reset Demo Data</span>
           </button>
 
           {/* Role Dropdown */}

@@ -1,119 +1,184 @@
+import { mockDb } from './mockDb';
+
 const API_BASE = '/api';
 
+async function safeFetch(url: string, options?: RequestInit, fallbackFn?: () => any): Promise<any> {
+  try {
+    const res = await fetch(url, options);
+    // If static host returns 404 or index.html fallback for /api/*
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('application/json')) {
+      throw new Error(`API unreachable or non-JSON response (${res.status})`);
+    }
+    return await res.json();
+  } catch (err) {
+    if (fallbackFn) {
+      return fallbackFn();
+    }
+    throw err;
+  }
+}
+
 export const api = {
+  // Reset Sample Data
+  async resetDatabase() {
+    return mockDb.resetDatabase();
+  },
+
   // Infrastructure
   async getInfrastructure() {
-    const res = await fetch(`${API_BASE}/infrastructure`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/infrastructure`,
+      undefined,
+      () => mockDb.getInfrastructure()
+    );
   },
 
   async completePmCheck(stationId: string, operatorId: string) {
-    const res = await fetch(`${API_BASE}/workstations/${stationId}/pm-check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operatorId, zeroPointVerified: true })
-    });
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/workstations/${stationId}/pm-check`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operatorId, zeroPointVerified: true })
+      },
+      () => mockDb.completePmCheck(stationId, operatorId)
+    );
   },
 
   async validateGauge(gaugeId: string) {
-    const res = await fetch(`${API_BASE}/gauges/${encodeURIComponent(gaugeId)}/validate`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/gauges/${encodeURIComponent(gaugeId)}/validate`,
+      undefined,
+      () => mockDb.validateGauge(gaugeId)
+    );
   },
 
   // Raw Materials
   async getRawMaterials() {
-    const res = await fetch(`${API_BASE}/raw-materials`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/raw-materials`,
+      undefined,
+      () => mockDb.getRawMaterials()
+    );
   },
 
-  async createRawMaterialIntake(data: unknown) {
-    const res = await fetch(`${API_BASE}/raw-materials`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async createRawMaterialIntake(data: any) {
+    return safeFetch(
+      `${API_BASE}/raw-materials`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.createRawMaterialIntake(data)
+    );
   },
 
   async verifyRawMaterial(id: string, decision: 'APPROVE' | 'REJECT', reason?: string, verifiedBy?: string) {
-    const res = await fetch(`${API_BASE}/raw-materials/${id}/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision, reason, verifiedBy })
-    });
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/raw-materials/${id}/verify`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, reason, verifiedBy })
+      },
+      () => mockDb.verifyRawMaterial(id, decision, reason, verifiedBy)
+    );
   },
 
   // Templates
   async getTemplates() {
-    const res = await fetch(`${API_BASE}/templates`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/templates`,
+      undefined,
+      () => mockDb.getTemplates()
+    );
   },
 
-  async createTemplate(data: unknown) {
-    const res = await fetch(`${API_BASE}/templates`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async createTemplate(data: any) {
+    return safeFetch(
+      `${API_BASE}/templates`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.createTemplate(data)
+    );
   },
 
   // Job Travelers
   async getJobTravelers() {
-    const res = await fetch(`${API_BASE}/job-travelers`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/job-travelers`,
+      undefined,
+      () => mockDb.getJobTravelers()
+    );
   },
 
   async getJobTraveler(id: string) {
-    const res = await fetch(`${API_BASE}/job-travelers/${id}`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/job-travelers/${id}`,
+      undefined,
+      () => mockDb.getJobTraveler(id)
+    );
   },
 
-  async completeOperation(travelerId: string, opNumber: number, operatorId: string, machineId: string) {
-    const res = await fetch(`${API_BASE}/job-travelers/${travelerId}/complete-operation`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ opNumber, operatorId, machineId })
-    });
-    return res.json();
+  async completeOperation(travelerId: string, opNumber: number, operatorId: string, machineId: string, cycleMinutes?: number, notes?: string) {
+    return safeFetch(
+      `${API_BASE}/job-travelers/${travelerId}/complete-operation`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opNumber, operatorId, machineId, cycleMinutes, notes })
+      },
+      () => mockDb.completeOperation(travelerId, opNumber, operatorId, machineId, cycleMinutes, notes)
+    );
   },
 
   async signOffFirstPiece(travelerId: string, opNumber: number, qaInspectorId: string, remarks: string) {
-    const res = await fetch(`${API_BASE}/job-travelers/${travelerId}/first-piece-signoff`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ opNumber, qaInspectorId, remarks })
-    });
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/job-travelers/${travelerId}/first-piece-signoff`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opNumber, qaInspectorId, remarks })
+      },
+      () => mockDb.signOffFirstPiece(travelerId, opNumber, qaInspectorId, remarks)
+    );
   },
 
   async logHourlyInspection(travelerId: string, opNumber: number, operatorId: string, sampleCount: number) {
-    const res = await fetch(`${API_BASE}/job-travelers/${travelerId}/hourly-inspection`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ opNumber, operatorId, sampleCount, status: 'Pass' })
-    });
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/job-travelers/${travelerId}/hourly-inspection`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opNumber, operatorId, sampleCount, status: 'Pass' })
+      },
+      () => mockDb.logHourlyInspection(travelerId, opNumber, operatorId, sampleCount)
+    );
   },
 
   // Inspections
-  async submitInspection(data: unknown, isOffline = false) {
+  async submitInspection(data: any, isOffline = false) {
     if (isOffline) {
-      // Save to offline queue in localStorage
       const queue = JSON.parse(localStorage.getItem('zapuza_offline_inspections') || '[]');
       queue.push({ ...(data as object), queuedAt: new Date().toISOString() });
       localStorage.setItem('zapuza_offline_inspections', JSON.stringify(queue));
       return { success: true, offlineQueued: true, message: 'Saved to local rugged tablet offline cache. Will auto-sync when online.' };
     }
 
-    const res = await fetch(`${API_BASE}/inspections/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/inspections/submit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.submitInspection(data, false)
+    );
   },
 
   async syncOfflineInspections() {
@@ -125,11 +190,7 @@ export const api = {
     let syncedCount = 0;
     for (const item of queue) {
       try {
-        await fetch(`${API_BASE}/inspections/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...item, isOfflineSync: true })
-        });
+        await api.submitInspection(item, false);
         syncedCount++;
       } catch (err) {
         console.error('Failed to sync offline item', err);
@@ -140,105 +201,150 @@ export const api = {
   },
 
   async getInspections() {
-    const res = await fetch(`${API_BASE}/inspections`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/inspections`,
+      undefined,
+      () => mockDb.getInspections()
+    );
   },
 
   // Supervisor Approvals
   async getSupervisorQueue() {
-    const res = await fetch(`${API_BASE}/supervisor/queue`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/supervisor/queue`,
+      undefined,
+      () => mockDb.getSupervisorQueue()
+    );
   },
 
-  async submitSupervisorDecision(data: unknown) {
-    const res = await fetch(`${API_BASE}/supervisor/decision`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async submitSupervisorDecision(data: any) {
+    return safeFetch(
+      `${API_BASE}/supervisor/decision`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.supervisorDecision(data)
+    );
   },
 
   // MRB Cases
   async getMrbCases() {
-    const res = await fetch(`${API_BASE}/mrb`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/mrb`,
+      undefined,
+      () => mockDb.getMrbCases()
+    );
   },
 
-  async submitMrbDisposition(id: string, data: unknown) {
-    const res = await fetch(`${API_BASE}/mrb/${id}/disposition`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async submitMrbDisposition(id: string, data: any) {
+    return safeFetch(
+      `${API_BASE}/mrb/${id}/disposition`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.resolveMrbCase(id, data)
+    );
   },
 
   // Shipping Interlock
   async checkShippingInterlock(travelerId: string) {
-    const res = await fetch(`${API_BASE}/shipping/check-interlock/${travelerId}`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/shipping/check-interlock/${travelerId}`,
+      undefined,
+      () => mockDb.checkShippingInterlock(travelerId)
+    );
   },
 
-  async generateGatePass(data: unknown) {
-    const res = await fetch(`${API_BASE}/shipping/generate-gate-pass`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async generateGatePass(data: any) {
+    return safeFetch(
+      `${API_BASE}/shipping/generate-gate-pass`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.generateGatePass(data)
+    );
   },
 
   // Traceability
   async queryForwardTraceability(heatNumber: string) {
-    const res = await fetch(`${API_BASE}/traceability/forward/${encodeURIComponent(heatNumber)}`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/traceability/forward/${encodeURIComponent(heatNumber)}`,
+      undefined,
+      () => mockDb.forwardTraceability(heatNumber)
+    );
   },
 
   async queryBackwardTraceability(serialNumber: string) {
-    const res = await fetch(`${API_BASE}/traceability/backward/${encodeURIComponent(serialNumber)}`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/traceability/backward/${encodeURIComponent(serialNumber)}`,
+      undefined,
+      () => mockDb.backwardTraceability(serialNumber)
+    );
   },
 
   // Customer Public Certificate
   async getPublicCertificate(travelerId: string) {
-    const res = await fetch(`${API_BASE}/public/coa/${travelerId}`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/public/coa/${travelerId}`,
+      undefined,
+      () => mockDb.getPublicCoa(travelerId)
+    );
   },
 
   // Shift Handovers
   async getShiftHandovers() {
-    const res = await fetch(`${API_BASE}/shift-handovers`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/shift-handovers`,
+      undefined,
+      () => mockDb.getShiftHandovers()
+    );
   },
 
-  async createShiftHandover(data: unknown) {
-    const res = await fetch(`${API_BASE}/shift-handovers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async createShiftHandover(data: any) {
+    return safeFetch(
+      `${API_BASE}/shift-handovers`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.createShiftHandover(data)
+    );
   },
 
-  async acknowledgeShiftHandover(id: string, data: unknown) {
-    const res = await fetch(`${API_BASE}/shift-handovers/${id}/acknowledge`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async acknowledgeShiftHandover(id: string, data: any) {
+    return safeFetch(
+      `${API_BASE}/shift-handovers/${id}/acknowledge`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => mockDb.acknowledgeShiftHandover(id, data?.incomingSupervisor, data?.incomingSignature)
+    );
   },
 
   // Bottlenecks
   async getBottlenecks() {
-    const res = await fetch(`${API_BASE}/bottlenecks`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/bottlenecks`,
+      undefined,
+      () => mockDb.getBottlenecks()
+    );
   },
 
   // Audit Logs
   async getAuditLogs() {
-    const res = await fetch(`${API_BASE}/audit-logs`);
-    return res.json();
+    return safeFetch(
+      `${API_BASE}/audit-logs`,
+      undefined,
+      () => mockDb.getAuditLogs()
+    );
   }
 };

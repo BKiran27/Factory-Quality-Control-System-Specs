@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Tablet,
   QrCode,
@@ -18,7 +18,10 @@ import {
   Sparkles,
   Zap,
   CreditCard,
-  UserCheck
+  UserCheck,
+  Upload,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import {
   JobTraveler,
@@ -84,6 +87,13 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     recommendation: string;
   } | null>(null);
 
+  // Defect Photo Live Camera & File Stream State
+  const [photoCameraActive, setPhotoCameraActive] = useState<boolean>(false);
+  const [photoCameraError, setPhotoCameraError] = useState<string | null>(null);
+  const photoVideoRef = useRef<HTMLVideoElement | null>(null);
+  const photoStreamRef = useRef<MediaStream | null>(null);
+  const photoFileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Hourly Inspection Alert simulation
   const [showHourlyAlert, setShowHourlyAlert] = useState<boolean>(false);
   const [hourlyMinutesLeft] = useState<number>(15);
@@ -118,7 +128,7 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     sounds.playTactileClick();
     const res = await api.validateGauge(gaugeId);
     if (!res.valid) {
-      setGaugeError(res.error);
+      setGaugeError(res.error || 'Tool Calibration Expired');
       sounds.playFailBuzzer();
     } else {
       setGaugeError(null);
@@ -249,12 +259,126 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
     advanceToNextPin();
   };
 
-  const handleCapturePhoto = () => {
+  const startDefectCamera = async () => {
+    setPhotoCameraError(null);
+    setPhotoCameraActive(true);
     sounds.playTactileClick();
-    const newPhotos = [...capturedPhotos, `defect_photo_${Date.now()}_${capturedPhotos.length + 1}.jpg`];
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      photoStreamRef.current = stream;
+      if (photoVideoRef.current) {
+        photoVideoRef.current.srcObject = stream;
+        photoVideoRef.current.play();
+      }
+    } catch (err: any) {
+      console.warn('Defect camera start error:', err);
+      setPhotoCameraActive(false);
+      setPhotoCameraError('Unable to open live camera. Check permissions or upload/select a photo.');
+    }
+  };
+
+  const stopDefectCamera = () => {
+    if (photoStreamRef.current) {
+      photoStreamRef.current.getTracks().forEach(t => t.stop());
+      photoStreamRef.current = null;
+    }
+    setPhotoCameraActive(false);
+  };
+
+  const snapDefectPhoto = () => {
+    if (!photoVideoRef.current) return;
+    const video = photoVideoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(10, canvas.height - 35, canvas.width - 20, 25);
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText(`DEFECT AUDIT | PIN #${photoCapturePin?.pinId || ''} | ${new Date().toISOString()}`, 20, canvas.height - 18);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      sounds.playPassChime();
+      addCapturedPhoto(dataUrl);
+      stopDefectCamera();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        sounds.playPassChime();
+        addCapturedPhoto(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSampleDefectPhoto = () => {
+    sounds.playTactileClick();
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 260;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 400, 260);
+
+      // Shaft body
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.roundRect(40, 50, 320, 160, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Flange chatter marks
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      for (let x = 110; x <= 270; x += 14) {
+        ctx.beginPath();
+        ctx.moveTo(x, 60);
+        ctx.lineTo(x + 6, 200);
+        ctx.stroke();
+      }
+
+      // Defect bounding callout
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(95, 80, 200, 105);
+
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText('NON-CONFORMANCE DETECTED', 105, 102);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '10px monospace';
+      ctx.fillText(`Pin #${photoCapturePin?.pinId}: Chatter Marks`, 105, 120);
+      ctx.fillText(`Actual: ${activeInputVal} mm`, 105, 138);
+      ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, 105, 156);
+    }
+    const sampleUrl = canvas.toDataURL('image/jpeg', 0.85);
+    addCapturedPhoto(sampleUrl);
+  };
+
+  const addCapturedPhoto = (dataUrl: string) => {
+    const newPhotos = [...capturedPhotos, dataUrl];
     setCapturedPhotos(newPhotos);
 
-    // If 2 photos are captured, trigger AI Computer Vision Defect Pre-Screening
     if (newPhotos.length >= 2) {
       sounds.playPassChime();
       setAiVisionAnalysis({
@@ -263,6 +387,15 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
         severity: photoCapturePin?.isCtq ? 'CRITICAL (CTQ Feature Impacted)' : 'Medium Deviation',
         recommendation: 'Recommend Rework Order Op 25: Corrective skim pass on CNC Lathe #04.'
       });
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    sounds.playTactileClick();
+    const updated = capturedPhotos.filter((_, i) => i !== index);
+    setCapturedPhotos(updated);
+    if (updated.length < 2) {
+      setAiVisionAnalysis(null);
     }
   };
 
@@ -885,32 +1018,123 @@ export const TabletInspectorView: React.FC<TabletInspectorViewProps> = ({
               Section 5.4 Standard: The inspector cannot proceed without capturing at least two clear photos of the defect or gauge reading.
             </p>
 
-            {/* Photo Preview Slots */}
+            {/* Live Camera Viewfinder (when active) */}
+            {photoCameraActive ? (
+              <div className="relative aspect-video bg-black rounded-xl overflow-hidden border-2 border-rose-500 shadow-xl flex items-center justify-center">
+                <video
+                  ref={photoVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Laser Alignment Reticle */}
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                  <div className="w-48 h-32 border-2 border-amber-400/80 rounded relative">
+                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-amber-400" />
+                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-amber-400" />
+                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-amber-400" />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-amber-400" />
+                    <div className="w-full h-0.5 bg-rose-500/80 absolute top-1/2 -translate-y-1/2" />
+                  </div>
+                  <span className="mt-2 text-[10px] font-mono text-amber-300 bg-slate-900/90 px-2 py-0.5 rounded border border-amber-500/30">
+                    Focus Camera on Defect or Caliper Display
+                  </span>
+                </div>
+
+                {/* Floating Snap & Cancel Buttons */}
+                <div className="absolute bottom-3 inset-x-0 flex justify-center space-x-3 z-10">
+                  <button
+                    onClick={snapDefectPhoto}
+                    className="px-4 py-1.5 bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs rounded-full shadow-lg flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Camera size={14} />
+                    <span>Snap Photo #{capturedPhotos.length + 1}</span>
+                  </button>
+                  <button
+                    onClick={stopDefectCamera}
+                    className="px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {photoCameraError && (
+              <div className="p-2.5 bg-amber-950/40 border border-amber-600/50 rounded-lg text-xs text-amber-200 flex items-center space-x-2">
+                <AlertTriangle size={15} className="text-amber-400 shrink-0" />
+                <span>{photoCameraError}</span>
+              </div>
+            )}
+
+            {/* Photo Preview Slots (2 Required) */}
             <div className="grid grid-cols-2 gap-3">
               {[0, 1].map((idx) => (
                 <div
                   key={idx}
-                  className="aspect-video bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg flex flex-col items-center justify-center p-2 text-center overflow-hidden"
+                  className="aspect-video bg-slate-950 border-2 border-dashed border-slate-700 rounded-lg relative overflow-hidden flex flex-col items-center justify-center p-2 text-center"
                 >
                   {capturedPhotos[idx] ? (
-                    <div className="relative w-full h-full">
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-xs text-emerald-400 font-mono">
-                        <ImageIcon size={20} className="mr-1" />
-                        <span>Defect Photo #{idx + 1} Captured</span>
+                    <div className="relative w-full h-full group">
+                      <img
+                        src={capturedPhotos[idx]}
+                        alt={`Defect ${idx + 1}`}
+                        className="w-full h-full object-cover rounded"
+                      />
+                      <div className="absolute top-1 left-1 bg-slate-950/80 text-emerald-400 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold border border-emerald-500/30">
+                        Photo #{idx + 1} ✓
                       </div>
+                      <button
+                        onClick={() => removePhoto(idx)}
+                        className="absolute top-1 right-1 p-1 bg-rose-950/90 hover:bg-rose-800 text-rose-300 rounded border border-rose-700 cursor-pointer"
+                        title="Retake or Delete Photo"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={handleCapturePhoto}
-                      className="text-xs text-amber-400 hover:text-amber-300 flex flex-col items-center space-y-1 cursor-pointer"
-                    >
-                      <Camera size={24} />
-                      <span className="font-bold">Capture Photo #{idx + 1}</span>
-                    </button>
+                    <div className="space-y-1.5 w-full flex flex-col items-center justify-center">
+                      <div className="text-[11px] font-mono text-slate-400">Photo #{idx + 1} Slot</div>
+                      <div className="flex flex-col gap-1 w-full max-w-[150px]">
+                        <button
+                          onClick={startDefectCamera}
+                          className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
+                        >
+                          <Camera size={12} />
+                          <span>Live Camera</span>
+                        </button>
+                        <button
+                          onClick={() => photoFileInputRef.current?.click()}
+                          className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
+                        >
+                          <Upload size={11} />
+                          <span>Upload / Roll</span>
+                        </button>
+                        <button
+                          onClick={handleSampleDefectPhoto}
+                          className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 text-[10px] rounded flex items-center justify-center space-x-1 cursor-pointer"
+                        >
+                          <Sparkles size={11} />
+                          <span>Demo Sample</span>
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
+
+            {/* Hidden File Picker */}
+            <input
+              ref={photoFileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
 
             {/* AI Computer Vision Defect Pre-Screening Result */}
             {aiVisionAnalysis && (
